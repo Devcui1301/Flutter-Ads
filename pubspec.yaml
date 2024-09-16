@@ -1,0 +1,33 @@
+name: admob_ads
+description: "A Google Admob plugin project."
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: '>=3.1.5 <4.0.0'
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_mobile_ads: "4.0.0"
+  shimmer: "3.0.0"
+  lottie: "3.0.0"
+  visibility_detector: "0.4.0+2"
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+
+  assets:
+    - packages/admob_ads/assets/loading.json
+ 
+  plugin:
+    platforms:
+      android:
+        package: com.vuongdv.admob_ads
+        pluginClass: AdmobAdsPlugin
