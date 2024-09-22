@@ -45,7 +45,10 @@ class AppOpenAdController implements AdController {
           _numAOALoadAttempts++;
           _appOpenAd = null;
           if (_numAOALoadAttempts < maxFailedLoadAttempts) {
-            loadAd.call();
+            loadAd(
+              onAdLoaded: onAdLoaded,
+              onAdFailedToLoad: onAdFailedToLoad,
+            );
           } else {
             _numAOALoadAttempts = 0;
             onAdFailedToLoad?.call();
@@ -126,8 +129,8 @@ class AppOpenAdController implements AdController {
           _showAd(isShowImmediately: false);
         },
         onAdFailedToLoad: () {
-          onAdFailedToLoad?.call();
           _hideLoadingOverlay(context, showLoading);
+          onAdFailedToLoad?.call();
         },
       );
     } else {
