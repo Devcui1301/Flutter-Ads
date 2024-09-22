@@ -25,6 +25,7 @@ class AdmobNativeAdWidget extends StatefulWidget {
     String currencyCode,
     AdType adType,
   )? onRevenuePaid;
+  final NativeAd? preloadNativeAd;
 
   const AdmobNativeAdWidget({
     super.key,
@@ -38,6 +39,7 @@ class AdmobNativeAdWidget extends StatefulWidget {
     this.adBannerColor,
     this.showCloseButton = true,
     this.adHeight,
+    this.preloadNativeAd,
   });
 
   @override
@@ -125,108 +127,116 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
   @override
   void initState() {
     if (AdmobAds.instance.isAdDisable == false) {
-      _nativeAd = NativeAd(
-        adUnitId: AdmobAds.instance.adConstant.nativeId[widget.placement] ?? '',
-        request: const AdRequest(),
-        nativeAdOptions: widget.size == NativeAdSize.fullScreen
-            ? NativeAdOptions(
-                adChoicesPlacement: AdChoicesPlacement.topRightCorner,
-              )
-            : null,
-        customOptions: {
-          'bg_color':
-              colorToHexString(AdmobAds.instance.nativeDecoration?.color),
-          'cta_bg_color': colorToHexString(AdmobAds
-              .instance.nativeCallToActionStyle?.backgroundColor
-              ?.resolve(Set.of({MaterialState.pressed}))),
-          'cta_text_color': colorToHexString(AdmobAds
-              .instance.nativeCallToActionStyle?.foregroundColor
-              ?.resolve(Set.of({MaterialState.pressed}))),
-          'title_text_color':
-              colorToHexString(AdmobAds.instance.nativeTitleStyle?.color),
-          'body_text_color':
-              colorToHexString(AdmobAds.instance.nativeBodyStyle?.color),
-          'ad_height': widget.adHeight == null
-              ? widget.size == NativeAdSize.small
-                  ? AdmobAds.instance.adConstant.nativeAdHeightSmall.toInt()
-                  : widget.size == NativeAdSize.medium
-                      ? AdmobAds.instance.adConstant.nativeAdHeightMedium
-                          .toInt()
-                      : widget.size == NativeAdSize.square
-                          ? (widget.adHeight ?? 120)
-                          : -1
-              : widget.adHeight!.toInt(),
-          'ad_banner_color': colorToHexString(AdmobAds.instance.primaryColor),
-        }..removeWhere((key, value) => value is String && value.isEmpty),
-        factoryId: widget.size == NativeAdSize.small
-            ? 'nativeAdSmallFactory'
-            : widget.size == NativeAdSize.medium
-                ? 'nativeAdMediumFactory'
-                : widget.size == NativeAdSize.square
-                    ? 'nativeAdSquareFactory'
-                    : 'nativeAdFullScreenFactory',
-        listener: NativeAdListener(
-          onAdLoaded: (Ad ad) {
-            logger('.............$NativeAd loaded.');
-            error = null;
-            setState(() {
-              _nativeAdIsLoaded = true;
-            });
-            widget.onAdLoaded?.call();
-          },
-          onAdFailedToLoad: (Ad ad, LoadAdError error) {
-            logger('..............$NativeAd failedToLoad: $error');
-            ad.dispose();
-            setState(() {
-              this.error = error;
-            });
-            widget.onAdFailedToLoad?.call();
-          },
-          onAdOpened: (Ad ad) {
-            logger('..............$NativeAd onAdOpened.');
-            widget.onAdClicked?.call();
-          },
-          onAdClosed: (Ad ad) {
-            logger('..............$NativeAd onAdClosed.');
-            widget.onAdClosed?.call();
-          },
-          onAdClicked: (ad) {
-            AdmobAds.instance.adClickedListener?.call(
-              AdClickedParams(
-                networkName:
-                    ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
-                        '',
-                adUnitId: ad.adUnitId,
-                adType: AdType.native.value,
-                placement: widget.placement,
-              ),
-            );
-          },
-          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-            logger(
-                '.............. NativeAd onPaidEvent ${'$valueMicros $precision'}');
-            widget.onRevenuePaid?.call(
-              ad,
-              valueMicros,
-              precision,
-              currencyCode,
-              AdType.native,
-            );
-            AdmobAds.instance.adRevenuePaidListener?.call(
-              AdRevenuePaidParams(
-                networkName:
-                    ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
-                        '',
-                revenue: valueMicros / 1000000.0,
-                adUnitId: ad.adUnitId,
-                adType: AdType.native.value,
-                placement: widget.placement,
-                country: currencyCode,
-              ),
-            );
-          },
-        ),
-      )..load();
+      if (widget.preloadNativeAd != null) {
+        _nativeAd = widget.preloadNativeAd;
+        setState(() {
+          _nativeAdIsLoaded = true;
+        });
+      } else {
+        _nativeAd = NativeAd(
+          adUnitId:
+              AdmobAds.instance.adConstant.nativeId[widget.placement] ?? '',
+          request: const AdRequest(),
+          nativeAdOptions: widget.size == NativeAdSize.fullScreen
+              ? NativeAdOptions(
+                  adChoicesPlacement: AdChoicesPlacement.topRightCorner,
+                )
+              : null,
+          customOptions: {
+            'bg_color':
+                colorToHexString(AdmobAds.instance.nativeDecoration?.color),
+            'cta_bg_color': colorToHexString(AdmobAds
+                .instance.nativeCallToActionStyle?.backgroundColor
+                ?.resolve(Set.of({MaterialState.pressed}))),
+            'cta_text_color': colorToHexString(AdmobAds
+                .instance.nativeCallToActionStyle?.foregroundColor
+                ?.resolve(Set.of({MaterialState.pressed}))),
+            'title_text_color':
+                colorToHexString(AdmobAds.instance.nativeTitleStyle?.color),
+            'body_text_color':
+                colorToHexString(AdmobAds.instance.nativeBodyStyle?.color),
+            'ad_height': widget.adHeight == null
+                ? widget.size == NativeAdSize.small
+                    ? AdmobAds.instance.adConstant.nativeAdHeightSmall.toInt()
+                    : widget.size == NativeAdSize.medium
+                        ? AdmobAds.instance.adConstant.nativeAdHeightMedium
+                            .toInt()
+                        : widget.size == NativeAdSize.square
+                            ? (widget.adHeight ?? 120)
+                            : -1
+                : widget.adHeight!.toInt(),
+            'ad_banner_color': colorToHexString(AdmobAds.instance.primaryColor),
+          }..removeWhere((key, value) => value is String && value.isEmpty),
+          factoryId: widget.size == NativeAdSize.small
+              ? 'nativeAdSmallFactory'
+              : widget.size == NativeAdSize.medium
+                  ? 'nativeAdMediumFactory'
+                  : widget.size == NativeAdSize.square
+                      ? 'nativeAdSquareFactory'
+                      : 'nativeAdFullScreenFactory',
+          listener: NativeAdListener(
+            onAdLoaded: (Ad ad) {
+              logger('.............$NativeAd loaded.');
+              error = null;
+              setState(() {
+                _nativeAdIsLoaded = true;
+              });
+              widget.onAdLoaded?.call();
+            },
+            onAdFailedToLoad: (Ad ad, LoadAdError error) {
+              logger('..............$NativeAd failedToLoad: $error');
+              ad.dispose();
+              setState(() {
+                this.error = error;
+              });
+              widget.onAdFailedToLoad?.call();
+            },
+            onAdOpened: (Ad ad) {
+              logger('..............$NativeAd onAdOpened.');
+              widget.onAdClicked?.call();
+            },
+            onAdClosed: (Ad ad) {
+              logger('..............$NativeAd onAdClosed.');
+              widget.onAdClosed?.call();
+            },
+            onAdClicked: (ad) {
+              AdmobAds.instance.adClickedListener?.call(
+                AdClickedParams(
+                  networkName: ad.responseInfo?.loadedAdapterResponseInfo
+                          ?.adSourceName ??
+                      '',
+                  adUnitId: ad.adUnitId,
+                  adType: AdType.native.value,
+                  placement: widget.placement,
+                ),
+              );
+            },
+            onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+              logger(
+                  '.............. NativeAd onPaidEvent ${'$valueMicros $precision'}');
+              widget.onRevenuePaid?.call(
+                ad,
+                valueMicros,
+                precision,
+                currencyCode,
+                AdType.native,
+              );
+              AdmobAds.instance.adRevenuePaidListener?.call(
+                AdRevenuePaidParams(
+                  networkName: ad.responseInfo?.loadedAdapterResponseInfo
+                          ?.adSourceName ??
+                      '',
+                  revenue: valueMicros / 1000000.0,
+                  adUnitId: ad.adUnitId,
+                  adType: AdType.native.value,
+                  placement: widget.placement,
+                  country: currencyCode,
+                ),
+              );
+            },
+          ),
+        )..load();
+      }
     }
     super.initState();
   }

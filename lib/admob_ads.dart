@@ -289,6 +289,121 @@ class AdmobAds {
       value.dispose();
     });
   }
+
+  NativeAdManager nativeAdManager = NativeAdManager();
+
+  void preloadNative(
+      {required String placement,
+      required NativeAdSize size,
+      required int preloadAdIndex,
+      double? adHeight,
+      VoidCallback? onAdLoaded,
+      VoidCallback? onAdFailedToLoad,
+      VoidCallback? onAdClicked,
+      VoidCallback? onAdClosed,
+      Function(
+        Ad ad,
+        double valueMicros,
+        PrecisionType precision,
+        String currencyCode,
+        AdType adType,
+      )? onRevenuePaid}) {
+    nativeAdManager.nativeAdList[preloadAdIndex] = NativeAd(
+      adUnitId: AdmobAds.instance.adConstant.nativeId[placement] ?? '',
+      request: const AdRequest(),
+      nativeAdOptions: size == NativeAdSize.fullScreen
+          ? NativeAdOptions(
+              adChoicesPlacement: AdChoicesPlacement.topRightCorner,
+            )
+          : null,
+      customOptions: {
+        'bg_color': colorToHexString(AdmobAds.instance.nativeDecoration?.color),
+        'cta_bg_color': colorToHexString(AdmobAds
+            .instance.nativeCallToActionStyle?.backgroundColor
+            ?.resolve(Set.of({MaterialState.pressed}))),
+        'cta_text_color': colorToHexString(AdmobAds
+            .instance.nativeCallToActionStyle?.foregroundColor
+            ?.resolve(Set.of({MaterialState.pressed}))),
+        'title_text_color':
+            colorToHexString(AdmobAds.instance.nativeTitleStyle?.color),
+        'body_text_color':
+            colorToHexString(AdmobAds.instance.nativeBodyStyle?.color),
+        'ad_height': adHeight == null
+            ? size == NativeAdSize.small
+                ? AdmobAds.instance.adConstant.nativeAdHeightSmall.toInt()
+                : size == NativeAdSize.medium
+                    ? AdmobAds.instance.adConstant.nativeAdHeightMedium.toInt()
+                    : size == NativeAdSize.square
+                        ? (adHeight ?? 120)
+                        : -1
+            : adHeight.toInt(),
+        'ad_banner_color': colorToHexString(AdmobAds.instance.primaryColor),
+      }..removeWhere((key, value) => value is String && value.isEmpty),
+      factoryId: size == NativeAdSize.small
+          ? 'nativeAdSmallFactory'
+          : size == NativeAdSize.medium
+              ? 'nativeAdMediumFactory'
+              : size == NativeAdSize.square
+                  ? 'nativeAdSquareFactory'
+                  : 'nativeAdFullScreenFactory',
+      listener: NativeAdListener(
+        onAdLoaded: (Ad ad) {
+          logger('.............$NativeAd loaded.');
+
+          onAdLoaded?.call();
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          logger('..............$NativeAd failedToLoad: $error');
+          ad.dispose();
+
+          onAdFailedToLoad?.call();
+        },
+        onAdOpened: (Ad ad) {
+          logger('..............$NativeAd onAdOpened.');
+          onAdClicked?.call();
+        },
+        onAdClosed: (Ad ad) {
+          logger('..............$NativeAd onAdClosed.');
+          onAdClosed?.call();
+        },
+        onAdClicked: (ad) {
+          AdmobAds.instance.adClickedListener?.call(
+            AdClickedParams(
+              networkName:
+                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                      '',
+              adUnitId: ad.adUnitId,
+              adType: AdType.native.value,
+              placement: placement,
+            ),
+          );
+        },
+        onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+          logger(
+              '.............. NativeAd onPaidEvent ${'$valueMicros $precision'}');
+          onRevenuePaid?.call(
+            ad,
+            valueMicros,
+            precision,
+            currencyCode,
+            AdType.native,
+          );
+          AdmobAds.instance.adRevenuePaidListener?.call(
+            AdRevenuePaidParams(
+              networkName:
+                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                      '',
+              revenue: valueMicros / 1000000.0,
+              adUnitId: ad.adUnitId,
+              adType: AdType.native.value,
+              placement: placement,
+              country: currencyCode,
+            ),
+          );
+        },
+      ),
+    )..load();
+  }
 }
 
 class AdConstant {
@@ -404,5 +519,19 @@ class AdClickedParams {
     data['adType'] = adType;
     data['placement'] = placement;
     return data;
+  }
+}
+
+class NativeAdManager {
+  NativeAd? nativeAd1;
+  NativeAd? nativeAd2;
+  NativeAd? nativeAd3;
+  NativeAd? nativeAd4;
+  NativeAd? nativeAd5;
+
+  List<NativeAd?> nativeAdList = [];
+
+  NativeAdManager() {
+    nativeAdList = [nativeAd1, nativeAd2, nativeAd3, nativeAd4, nativeAd5];
   }
 }
