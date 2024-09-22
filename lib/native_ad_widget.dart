@@ -237,6 +237,9 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
           setState(() {
             _nativeAdIsLoaded = true;
           });
+          AdmobAds.instance.nativeAdManager.nativeAdList[widget.preloadIndex!] =
+              null;
+          manager.isAdLoadedList[widget.preloadIndex!] = false;
         } else {
           _loadAd();
         }
@@ -251,10 +254,6 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
   void dispose() {
     super.dispose();
     _nativeAd?.dispose();
-    if (widget.preloadIndex != null) {
-      AdmobAds.instance.nativeAdManager.nativeAdList[widget.preloadIndex!] =
-          null;
-    }
   }
 }
 
