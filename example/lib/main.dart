@@ -13,30 +13,30 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AdmobAds.instance.initialize(
     AdConstant(
-      interstitialId: {
-        'inter_1': 'ca-app-pub-3940256099942544/1033173712',
-        'inter_2': 'ca-app-pub-3940256099942544/1033173712',
-      },
-      nativeId: {
-        'native_1': '/6499/example/native',
-        'native_2': '/6499/example/native',
-      },
-      appOpenId: {
-        'app_open_1': 'ca-app-pub-3940256099942544/9257395921',
-        'app_open_2': 'ca-app-pub-3940256099942544/9257395921',
-      },
-      bannerAnchorId: {
-        'banner_1': 'ca-app-pub-3940256099942544/6300978111',
-        'banner_2': 'ca-app-pub-3940256099942544/6300978111',
-      },
-      rewardedAdId: {
-        'rewarded_1': 'ca-app-pub-3940256099942544/5224354917',
-        'rewarded_2': 'ca-app-pub-3940256099942544/5224354917',
-      },
-      bannerCollapsibleId: {},
-      interstitialOffsetTime: const Duration(seconds: 30),
-      appOpenOffsetTime: const Duration(seconds: 30),
-    ),
+        interstitialId: {
+          'inter_1': 'ca-app-pub-3940256099942544/1033173712',
+          'inter_2': 'ca-app-pub-3940256099942544/1033173712',
+        },
+        nativeId: {
+          'native_1': '/6499/example/native',
+          'native_2': '/6499/example/native',
+        },
+        appOpenId: {
+          'app_open_1': 'ca-app-pub-3940256099942544/9257395921',
+          'app_open_2': 'ca-app-pub-3940256099942544/9257395921',
+        },
+        bannerAnchorId: {
+          'banner_1': 'ca-app-pub-3940256099942544/6300978111',
+          'banner_2': 'ca-app-pub-3940256099942544/6300978111',
+        },
+        rewardedAdId: {
+          'rewarded_1': 'ca-app-pub-3940256099942544/5224354917',
+          'rewarded_2': 'ca-app-pub-3940256099942544/5224354917',
+        },
+        bannerCollapsibleId: {},
+        interstitialOffsetTime: const Duration(seconds: 30),
+        appOpenOffsetTime: const Duration(seconds: 30),
+        timeoutLoadAd: const Duration(seconds: 30)),
   );
   AdmobAds.instance
     ..nativeCallToActionStyle = ButtonStyle(

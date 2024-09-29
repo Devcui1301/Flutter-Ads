@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:admob_ads/ad_controller.dart';
@@ -23,6 +25,7 @@ class RewardedAdController implements AdController {
     _adPlacement = placement;
   }
 
+  Timer? _loadingTimer;
   @override
   Future<void> loadAd(
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
@@ -88,7 +91,7 @@ class RewardedAdController implements AdController {
         }
       },
       onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
-        _hideLoadingOverlay(context);
+        _hideLoadingOverlay(context, showLoading);
         _rewardedAd = null;
         ad.dispose();
         onStartLoading?.call(false);
@@ -107,14 +110,14 @@ class RewardedAdController implements AdController {
         if (autoReloadAdAfterShow) {
           loadAd();
         }
-        _hideLoadingOverlay(context);
+        _hideLoadingOverlay(context, showLoading);
         onAdDisplay?.call();
       },
     );
 
     if (_rewardedAd == null) {
       logger('begin load ad');
-      _showLoadingOverlay(context);
+      _showLoadingOverlay(context, showLoading, onAdFailedToLoad);
       await loadAd(
         onAdLoaded: () {
           onAdLoaded?.call();
@@ -123,12 +126,12 @@ class RewardedAdController implements AdController {
         },
         onAdFailedToLoad: () {
           onAdFailedToLoad?.call();
-          _hideLoadingOverlay(context);
+          _hideLoadingOverlay(context, showLoading);
         },
       );
     } else {
       logger('REWARDED ad != null');
-      _showLoadingOverlay(context);
+      _showLoadingOverlay(context, showLoading, onAdFailedToLoad);
       _setAdListener(fullScreenContentCallback);
       _showAd();
     }
@@ -165,18 +168,29 @@ class RewardedAdController implements AdController {
     }
   }
 
-  void _showLoadingOverlay(BuildContext? context) {
-    logger('INTER: isReady: false -> show loading');
+  void _showLoadingOverlay(
+      BuildContext? context, bool showLoading, VoidCallback? onAdFailedToLoad) {
+    logger('REWARD: isReady: false -> show loading');
     AdmobAds.instance.isShownRewardedPending = true;
+    _loadingTimer ??= Timer(AdmobAds.instance.adConstant.timeoutLoadAd, () {
+      logger(
+          'REWARD: Loading timeout -> hide loading and call onAdFailedToLoad');
+      _hideLoadingOverlay(context, showLoading);
+      onAdFailedToLoad?.call();
+    });
+    if (!showLoading) return;
     if (context != null && context.mounted) {
       Navigator.of(context).push(LoadingOverlay());
     }
   }
 
-  void _hideLoadingOverlay(BuildContext? context) {
+  void _hideLoadingOverlay(BuildContext? context, bool showLoading) {
     if (AdmobAds.instance.isShownRewardedPending) {
-      logger('INTER: isReady: true -> hide loading');
+      logger('REWARD: isReady: true -> hide loading');
       AdmobAds.instance.isShownRewardedPending = false;
+      _loadingTimer?.cancel(); // Cancel the Timer
+      _loadingTimer = null; // Reset Timer
+      if (!showLoading) return;
       if (context != null && context.mounted) {
         Navigator.of(context).pop();
       }

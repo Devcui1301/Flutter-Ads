@@ -5,12 +5,13 @@ import 'package:admob_ads/admob_ads.dart';
 import 'package:admob_ads/utils.dart';
 import 'package:admob_ads/widget/loading_dialog.dart';
 
+import 'dart:async';
+
 class InterstitialAdController implements AdController {
   final _request = const AdRequest();
   InterstitialAd? _interstitialAd;
   int _numInterstitialLoadAttempts = 0;
   static const int maxFailedLoadAttempts = 5;
-  // the offet time after the last ad was showed
 
   late String _adId;
   void setAdId(String id) {
@@ -21,6 +22,8 @@ class InterstitialAdController implements AdController {
   void setAdPlacement(String placement) {
     _adPlacement = placement;
   }
+
+  Timer? _loadingTimer; // Biến lưu trữ Timer
 
   @override
   Future<void> loadAd(
@@ -91,7 +94,7 @@ class InterstitialAdController implements AdController {
         ad.dispose();
       },
       onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-        _hideLoadingOverlay(context);
+        _hideLoadingOverlay(context, showLoading);
         _interstitialAd = null;
         ad.dispose();
         onStartLoading?.call(false);
@@ -107,7 +110,7 @@ class InterstitialAdController implements AdController {
         ));
       },
       onAdImpression: (ad) {
-        _hideLoadingOverlay(context);
+        _hideLoadingOverlay(context, showLoading);
         onAdDisplay?.call();
         if (autoReloadAdAfterShow) {
           loadAd();
@@ -117,7 +120,7 @@ class InterstitialAdController implements AdController {
 
     if (_interstitialAd == null) {
       logger('begin load ad');
-      _showLoadingOverlay(context);
+      _showLoadingOverlay(context, showLoading, onAdFailedToLoad);
       await loadAd(
         onAdLoaded: () {
           onAdLoaded?.call();
@@ -126,12 +129,13 @@ class InterstitialAdController implements AdController {
         },
         onAdFailedToLoad: () {
           onAdFailedToLoad?.call();
-          _hideLoadingOverlay(context);
+          _hideLoadingOverlay(context, showLoading);
         },
       );
     } else {
       logger('Inters ad != null');
-      _showLoadingOverlay(context);
+      _showLoadingOverlay(
+          context, showLoading, onAdFailedToLoad); // Chỉnh sửa ở đây
       _setAdListener(fullScreenContentCallback);
       _showAd();
     }
@@ -166,19 +170,31 @@ class InterstitialAdController implements AdController {
     }
   }
 
-  void _showLoadingOverlay(BuildContext? context) {
+  void _showLoadingOverlay(
+      BuildContext? context, bool showLoading, VoidCallback? onAdFailedToLoad) {
     logger('INTER: isReady: false -> show loading');
     AdmobAds.instance.isShownIntersPending = true;
+    _loadingTimer ??= Timer(AdmobAds.instance.adConstant.timeoutLoadAd, () {
+      logger(
+          'INTER: Loading timeout -> hide loading and call onAdFailedToLoad');
+      _hideLoadingOverlay(context, showLoading);
+      onAdFailedToLoad?.call();
+    });
+
+    if (!showLoading) return;
     if (context != null && context.mounted) {
       Navigator.of(context).push(LoadingOverlay());
     }
   }
 
-  void _hideLoadingOverlay(BuildContext? context) {
+  void _hideLoadingOverlay(BuildContext? context, bool showLoading) {
     logger('INTER: isReady: true -> hide loading');
     if (AdmobAds.instance.isShownIntersPending) {
       logger('INTER: isReady: true -> hide loading2');
       AdmobAds.instance.isShownIntersPending = false;
+      _loadingTimer?.cancel(); // Cancel the Timer
+      _loadingTimer = null; // Reset Timer
+      if (!showLoading) return;
       if (context != null && context.mounted) {
         Navigator.of(context).pop();
       }
@@ -189,5 +205,6 @@ class InterstitialAdController implements AdController {
   void dispose() {
     _interstitialAd?.dispose();
     _interstitialAd = null;
+    _loadingTimer?.cancel(); // Cancel the Timer when disposing
   }
 }

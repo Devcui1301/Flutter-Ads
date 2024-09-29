@@ -127,6 +127,7 @@ class AdmobAds {
       VoidCallback? onAdDisplayed,
       VoidCallback? onAdFailToLoad,
       bool forceShow = false,
+      bool showLoading = true,
       bool autoReloadAdAfterShow = true}) {
     placement ??= adConstant.interstitialId.keys.first;
     logger('show with placement: $placement ${_intersAdController[placement]}');
@@ -155,6 +156,7 @@ class AdmobAds {
     _intersAdController[placement]?.showAd(
         context: context,
         forceShow: forceShow,
+        showLoading: showLoading,
         onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
         onAdClicked: () => onAdClicked?.call(),
         onAdDismissedFullScreenContent: () {
@@ -234,6 +236,7 @@ class AdmobAds {
       VoidCallback? onAdLoaded,
       VoidCallback? onAdDisplayed,
       VoidCallback? onAdFailToLoad,
+      bool showLoading = true,
       bool forceShow = true,
       bool autoReloadAdAfterShow = true}) {
     placement ??= adConstant.rewardedAdId.keys.first;
@@ -275,6 +278,7 @@ class AdmobAds {
         onAdFailedToLoad: () => onAdFailToLoad?.call(),
         onAdDisplay: () => onAdDisplayed?.call(),
         placement: placement,
+        showLoading: showLoading,
         autoReloadAdAfterShow: autoReloadAdAfterShow);
   }
 
@@ -332,6 +336,7 @@ class AdConstant {
   // the offet time after the last ad was showed, default is 30s
   final Duration interstitialOffsetTime;
   final Duration appOpenOffsetTime;
+  final Duration timeoutLoadAd;
   double nativeAdHeightSmall;
   double nativeAdHeightMedium;
 
@@ -345,6 +350,7 @@ class AdConstant {
     this.rewardedAdId = const {},
     this.interstitialOffsetTime = const Duration(seconds: 30),
     this.appOpenOffsetTime = const Duration(seconds: 30),
+    this.timeoutLoadAd = const Duration(seconds: 30),
     this.nativeAdHeightMedium = 280,
     this.nativeAdHeightSmall = 160,
   });

@@ -15,6 +15,7 @@ class RewardedAdScreen extends StatelessWidget {
           AdmobAds.instance.showRewardedAd(
               context: context,
               forceShow: true,
+              showLoading: true,
               onAdDismissedFullScreenContent: () {
                 log('On AOA dismissed callback');
               },

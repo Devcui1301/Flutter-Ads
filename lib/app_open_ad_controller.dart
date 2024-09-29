@@ -5,6 +5,7 @@ import 'package:admob_ads/admob_ads.dart';
 import 'package:admob_ads/utils.dart';
 import 'package:admob_ads/widget/aoa_place_holder.dart';
 import 'package:admob_ads/widget/loading_dialog.dart';
+import 'dart:async';
 
 class AppOpenAdController implements AdController {
   final _request = const AdRequest();
@@ -24,6 +25,7 @@ class AppOpenAdController implements AdController {
     _adPlacement = placement;
   }
 
+  Timer? _loadingTimer;
   @override
   Future<void> loadAd({
     VoidCallback? onAdLoaded,
@@ -121,7 +123,7 @@ class AppOpenAdController implements AdController {
     );
 
     if (_appOpenAd == null) {
-      _showLoadingOverlay(context, showLoading);
+      _showLoadingOverlay(context, showLoading, onAdFailedToLoad);
       await loadAd(
         onAdLoaded: () {
           onAdLoaded?.call();
@@ -135,7 +137,7 @@ class AppOpenAdController implements AdController {
       );
     } else {
       logger('AOA ad != null');
-      _showLoadingOverlay(context, showLoading);
+      _showLoadingOverlay(context, showLoading, onAdFailedToLoad);
       _setAdListener(fullScreenContentCallback);
       _showAd(isShowImmediately: true);
     }
@@ -169,8 +171,14 @@ class AppOpenAdController implements AdController {
     }
   }
 
-  void _showLoadingOverlay(BuildContext? context, bool showLoading) {
+  void _showLoadingOverlay(
+      BuildContext? context, bool showLoading, VoidCallback? onAdFailedToLoad) {
     AdmobAds.instance.isShownAOAPending = true;
+    _loadingTimer ??= Timer(AdmobAds.instance.adConstant.timeoutLoadAd, () {
+      logger('AOA: Loading timeout -> hide loading and call onAdFailedToLoad');
+      _hideLoadingOverlay(context, showLoading);
+      onAdFailedToLoad?.call();
+    });
     if (!showLoading) return;
     if (context != null && context.mounted) {
       Navigator.of(context).push(LoadingOverlay());
@@ -180,6 +188,8 @@ class AppOpenAdController implements AdController {
   void _hideLoadingOverlay(BuildContext? context, bool showLoading) {
     if (AdmobAds.instance.isShownAOAPending) {
       AdmobAds.instance.isShownAOAPending = false;
+      _loadingTimer?.cancel(); // Cancel the Timer
+      _loadingTimer = null; // Reset Timer
       if (!showLoading) return;
       if (context != null && context.mounted) {
         Navigator.of(context).pop();

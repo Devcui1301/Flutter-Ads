@@ -16,6 +16,7 @@ class IntersAdScreen extends StatelessWidget {
           PrimaryButton(
             onPressed: () {
               AdmobAds.instance.showInterstitialAd(
+                showLoading: true,
                 // forceShow: true,
                 onAdDismissedFullScreenContent: () {
                   log('On inters ad dismissed callback');

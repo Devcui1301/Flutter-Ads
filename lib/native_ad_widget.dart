@@ -170,7 +170,7 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
           setState(() {
             _nativeAdIsLoaded = true;
           });
-          Future.delayed(const Duration(milliseconds: 300)).then((value) {
+          Future.delayed(const Duration(milliseconds: 700)).then((value) {
             setState(() {});
           });
           widget.onAdLoaded?.call();
@@ -240,7 +240,7 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
           setState(() {
             _nativeAdIsLoaded = true;
           });
-          Future.delayed(const Duration(milliseconds: 300)).then((value) {
+          Future.delayed(const Duration(milliseconds: 700)).then((value) {
             setState(() {});
           });
           AdmobAds.instance.nativeAdManager.nativeAdList[widget.preloadIndex!] =
