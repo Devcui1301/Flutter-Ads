@@ -33,7 +33,6 @@ class AppOpenAdController implements AdController {
   }) async {
     await AppOpenAd.load(
       adUnitId: _adId,
-      orientation: AppOpenAd.orientationPortrait,
       request: _request,
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {

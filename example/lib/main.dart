@@ -33,7 +33,10 @@ void main() async {
           'rewarded_1': 'ca-app-pub-3940256099942544/5224354917',
           'rewarded_2': 'ca-app-pub-3940256099942544/5224354917',
         },
-        bannerCollapsibleId: {},
+        bannerCollapsibleId: {
+          "collap_1": "ca-app-pub-3940256099942544/2014213617",
+          "collap_2": "ca-app-pub-3940256099942544/2014213617",
+        },
         interstitialOffsetTime: const Duration(seconds: 30),
         appOpenOffsetTime: const Duration(seconds: 30),
         timeoutLoadAd: const Duration(seconds: 30)),
@@ -113,6 +116,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     'Inline',
     'Collapsible',
     'Rewarded',
+    'Open Ad Inspector'
   ];
   String selectedAd = 'AOA';
 
@@ -154,6 +158,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 setState(() {
                   selectedAd = value.toString();
                 });
+                if (value.toString() == "Open Ad Inspector") {
+                  AdmobAds.instance.openAdInspector();
+                }
               },
             ),
           ],

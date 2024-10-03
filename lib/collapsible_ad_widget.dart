@@ -1,13 +1,13 @@
-import 'dart:io';
+import 'dart:async';
 
+import 'package:admob_ads/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:admob_ads/admob_ads_platform_interface.dart';
 import 'package:admob_ads/widget/container_shimmer.dart';
 import 'package:admob_ads/widget/primary_shimmer.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:uuid/uuid.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import 'admob_ads.dart';
@@ -20,9 +20,12 @@ class AdmobCollapsibleAdWidget extends StatefulWidget {
   final VoidCallback? onAdFailedToLoad;
   final VoidCallback? onAdClicked;
   final VoidCallback? onAdClosed;
+  //If value is -1: Use google admob console auto reload
+  //Else (ad id auto reload must be disable in console): Reload after reloadTimeInSeconds seconds
   final int reloadTimeInSeconds;
   final String placement;
-  final bool? isBottom;
+  final bool isBottom;
+  final int maxReloadAttempts;
   const AdmobCollapsibleAdWidget(
       {super.key,
       this.isCollapsOnce = true,
@@ -34,20 +37,30 @@ class AdmobCollapsibleAdWidget extends StatefulWidget {
       this.onAdImpression,
       this.reloadTimeInSeconds = -1,
       required this.placement,
-      this.isBottom = true});
+      this.isBottom = true,
+      this.maxReloadAttempts = 3});
 
   @override
   State<AdmobCollapsibleAdWidget> createState() =>
-      _AdmobCollapsibleAdWidgetState();
+      _SkyCollapsibleAdWidgetState();
 }
 
-class _AdmobCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
+class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
+  BannerAd? _bannerAd;
+  bool? _isLoaded;
+  double bottomAdHeight = 80;
+  Timer? _reloadAdTimer;
+  bool _isVisible = false;
+  AdRequest? _adRequest;
+  int _reloadAttempts = 0; // Thêm biến đếm số lần load thất bại
+
+  BannerAdListener? _bannerAdListener;
   @override
   void initState() {
     super.initState();
-    // Dimensions in logical pixels (dp)
     FlutterView view = WidgetsBinding.instance.platformDispatcher.views.first;
 
+    // Dimensions in logical pixels (dp)
     Size size = view.physicalSize / view.devicePixelRatio;
     double height = size.height;
 
@@ -56,233 +69,212 @@ class _AdmobCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
         : height <= 720
             ? 50
             : 90;
-
-    if (AdmobAds.instance.isAdDisable == false) {
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        _collapsibleAdCallback.receiveBroadcastStream().timeout(
-          const Duration(seconds: 60),
-          onTimeout: (sink) {
-            sink.close();
-          },
-        ).listen((event) {
-          switch (event['type']) {
-            case 'onAdClicked':
-              widget.onAdClicked?.call();
-              AdmobAds.instance.adClickedListener?.call(
-                AdClickedParams(
-                    networkName: 'admob',
-                    adUnitId: '',
-                    adType: AdType.bannerCollapsible.value,
-                    placement: widget.placement),
-              );
-              break;
-            case 'onAdClosed':
-              widget.onAdClosed?.call();
-              break;
-            case 'onAdFailedToLoad':
-              try {
-                setState(() {
-                  _isAdFaiedToLoad = true;
-                });
-              } catch (_) {}
-              widget.onAdFailedToLoad?.call();
-              break;
-            case 'onAdImpression':
-              widget.onAdImpression?.call();
-              break;
-            case 'onAdLoaded':
-              try {
-                setState(() {
-                  _isAdLoaded = true;
-                });
-              } catch (_) {}
-              widget.onAdLoaded?.call();
-              break;
-            case 'onAdOpened':
-              widget.onAdOpened?.call();
-              break;
-            case 'onPaidEvent':
-              double adRevenue = 0;
-              try {
-                adRevenue = event['value'];
-              } catch (_) {}
-
-              AdmobAds.instance.adRevenuePaidListener?.call(
-                AdRevenuePaidParams(
-                  networkName: 'admob',
-                  revenue: adRevenue,
-                  adUnitId: AdmobAds.instance.adConstant
-                          .bannerCollapsibleId[widget.placement] ??
-                      '',
-                  adType: AdType.bannerCollapsible.value,
-                  placement: widget.placement,
-                  country: '',
-                ),
-              );
-              break;
-            case 'adHeightChanged':
-              try {
-                final int adHeight = event['data'];
-                if (adHeight != bottomAdHeight) {
-                  setState(() {
-                    bottomAdHeight = adHeight;
-                  });
-                }
-              } catch (e) {}
-
-              break;
-            default:
-          }
-        });
-      });
+    Map<String, String>? extras = {
+      "collapsible": widget.isBottom ? "bottom" : "top",
+    };
+    if (widget.isCollapsOnce) {
+      extras["collapsible_request_id"] = const Uuid().v4();
     }
+    _adRequest = AdRequest(extras: extras);
+    _bannerAdListener = BannerAdListener(
+      onAdLoaded: (ad) {
+        setState(() {
+          _bannerAd = ad as BannerAd;
+          _isLoaded = true;
+        });
+        widget.onAdLoaded?.call();
+      },
+      onAdFailedToLoad: (ad, err) {
+        ad.dispose();
+        widget.onAdFailedToLoad?.call();
+        setState(() {
+          _isLoaded = false;
+          _reloadAttempts++; // Tăng biến đếm khi load thất bại
+        });
+        if (_reloadAttempts < widget.maxReloadAttempts) {
+          logger("Ad load failed. Attempting reload #$_reloadAttempts");
+          _loadAd(); // Gọi lại loadAd khi chưa vượt quá giới hạn
+        } else {
+          logger(
+              "Ad failed to load after $_reloadAttempts attempts. No more retries.");
+        }
+      },
+      onAdOpened: (Ad ad) {
+        widget.onAdOpened?.call();
+      },
+      onAdClosed: (Ad ad) {
+        widget.onAdClosed?.call();
+      },
+      onAdImpression: (Ad ad) {
+        widget.onAdImpression?.call();
+        logger("onAdImpression");
+      },
+      onAdClicked: (ad) {
+        widget.onAdClicked?.call();
+        AdmobAds.instance.adClickedListener?.call(AdClickedParams(
+          networkName:
+              ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
+          adUnitId: ad.adUnitId,
+          adType: AdType.bannerCollapsible.value,
+          placement: widget.placement,
+        ));
+      },
+      onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+        AdmobAds.instance.adRevenuePaidListener?.call(
+          AdRevenuePaidParams(
+            networkName: 'google_admob',
+            revenue: valueMicros / 1000000.0,
+            adUnitId: ad.adUnitId,
+            adType: AdType.bannerCollapsible.value,
+            placement: widget.placement,
+            country: currencyCode,
+          ),
+        );
+        logger("onPaidEvent: ${valueMicros / 1000000.0}");
+      },
+    );
+  }
+
+  void _startAdReloadTimer() {
+    _reloadAdTimer?.cancel(); // Hủy Timer cũ nếu đang chạy
+    if (widget.reloadTimeInSeconds == -1) {
+      return;
+    }
+    _reloadAdTimer = Timer.periodic(
+      Duration(seconds: widget.reloadTimeInSeconds),
+      (timer) {
+        if (_isVisible) {
+          logger("reload ad collap");
+          _loadAd();
+        }
+      },
+    );
+  }
+
+  void _stopAdReloadTimer() {
+    _bannerAd?.dispose();
+    _reloadAdTimer?.cancel(); // Dừng Timer khi không visible
+    _reloadAdTimer = null;
+    logger("Ad reload timer stopped.");
   }
 
   @override
   void dispose() {
-    if (Platform.isIOS) AdmobAdsPlatform.instance.disposeCollapsibleAdLoad();
+    // Hủy Timer khi widget bị dispose
+    _stopAdReloadTimer();
+    _bannerAd?.dispose();
+    _bannerAdListener = null;
+    _adRequest = null;
     super.dispose();
   }
 
-  late int bottomAdHeight;
-  String viewType = 'admob_collapsible_ads';
-  final EventChannel _collapsibleAdCallback =
-      const EventChannel('collapsible_event_callback');
-  bool _isAdFaiedToLoad = false;
-  bool _isAdLoaded = false;
+  void _loadAd() async {
+    if (AdmobAds.instance.isAdDisable) {
+      return;
+    }
+    _bannerAd?.dispose();
+    // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
+    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+        MediaQuery.sizeOf(context).width.truncate());
+
+    if (size == null) {
+      // Unable to get width of anchored banner.
+      return;
+    }
+
+    BannerAd(
+      adUnitId: kDebugMode
+          ? 'ca-app-pub-3940256099942544/2014213617'
+          : AdmobAds
+                  .instance.adConstant.bannerCollapsibleId[widget.placement] ??
+              "",
+      request: _adRequest ?? const AdRequest(),
+      size: size,
+      listener: _bannerAdListener ?? const BannerAdListener(),
+    ).load();
+  }
+
+  void _onVisibilityChanged(VisibilityInfo info) {
+    if (info.visibleFraction == 0.0 && _isVisible) {
+      _isVisible = false;
+      _stopAdReloadTimer(); // Dừng Timer khi không còn visible
+    } else if (info.visibleFraction > 0.0 && !_isVisible) {
+      _isVisible = true;
+      _loadAd(); // Gọi hàm loadAd khi visible trở lại
+      if (_reloadAdTimer == null && widget.reloadTimeInSeconds != 0) {
+        _startAdReloadTimer(); // Khởi động lại Timer nếu nó đang dừng
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (AdmobAds.instance.isAdDisable || _isAdFaiedToLoad) {
-      return const SizedBox();
-    }
-
-    return Stack(
-      children: [
-        VisibilityDetector(
-          onVisibilityChanged: _onVisibilityChanged,
-          key: Key('collapsible-key-${widget.placement}'),
-          child: SizedBox(
-            height: bottomAdHeight.toDouble(),
-            width: double.infinity,
-            // color: AppColor.excelColor,
-            // alignment: Alignment.bottomCenter,
-            child: Platform.isIOS
-                ? UiKitView(
-                    viewType: viewType,
-                    layoutDirection: TextDirection.ltr,
-                    creationParams: {
-                      'ad_unit_id':
-                          AdmobAds.instance.adConstant.bannerCollapsibleId,
-                      'isShowCollapseOnce': widget.isCollapsOnce,
-                      'reload_time_in_seconds': widget.reloadTimeInSeconds,
-                      'placement': widget.placement,
-                      'isBottom': widget.isBottom
-                    },
-                    creationParamsCodec: const StandardMessageCodec(),
-                  )
-                : PlatformViewLink(
-                    viewType: viewType,
-                    surfaceFactory: (context, controller) {
-                      return AndroidViewSurface(
-                        controller: controller as AndroidViewController,
-                        gestureRecognizers: const <Factory<
-                            OneSequenceGestureRecognizer>>{},
-                        hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-                      );
-                    },
-                    onCreatePlatformView: (params) {
-                      return PlatformViewsService.initSurfaceAndroidView(
-                        id: params.id,
-                        viewType: viewType,
-                        layoutDirection: TextDirection.ltr,
-                        creationParams: {
-                          'isShowCollapseOnce': widget.isCollapsOnce,
-                          'reload_time_in_seconds': widget.reloadTimeInSeconds,
-                          'placement': widget.placement,
-                          'isBottom': widget.isBottom
-                        },
-                        creationParamsCodec: const StandardMessageCodec(),
-                        onFocus: () {
-                          params.onFocusChanged(true);
-                        },
-                      )
-                        ..addOnPlatformViewCreatedListener(
-                            params.onPlatformViewCreated)
-                        ..create();
-                    },
-                  ),
-          ),
-        ),
-        if (_isAdLoaded == false)
-          Container(
-            height: bottomAdHeight.toDouble(),
-            color: Colors.grey[50],
-            padding: const EdgeInsets.all(8),
-            child: PrimaryShimmer(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Ad',
-                    style: TextStyle(fontStyle: FontStyle.italic),
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  ContainerShimmer(
-                    height: bottomAdHeight.toDouble() - 16,
-                    width: bottomAdHeight.toDouble() - 16,
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ContainerShimmer(
-                          width: 200,
-                          height: 20,
-                        ),
-                        SizedBox(
-                          height: 16,
-                        ),
-                        ContainerShimmer(
-                          width: 240,
-                          height: 20,
-                        ),
-                      ],
+    return AdmobAds.instance.isAdDisable
+        ? const SizedBox()
+        : VisibilityDetector(
+            key: Key('collapsible-key-${widget.placement}'),
+            onVisibilityChanged: _onVisibilityChanged,
+            child: (_bannerAd != null && _isLoaded == true)
+                ? Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SafeArea(
+                      child: SizedBox(
+                        width: _bannerAd!.size.width.toDouble(),
+                        height: _bannerAd!.size.height.toDouble(),
+                        child: AdWidget(
+                            key: ValueKey(_bannerAd!.hashCode), ad: _bannerAd!),
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  // Center(
-                  //   child: ContainerShimmer(
-                  //     height: bottomAdHeight / 2 - 8,
-                  //     width: bottomAdHeight.toDouble(),
-                  //   ),
-                  // ),
-                ],
-              ),
-            ),
-          )
-      ],
-    );
-  }
-
-  // final bool _isFirstInitialization = true;
-  void _onVisibilityChanged(VisibilityInfo info) {
-    // if (_isFirstInitialization) {
-    //   _isFirstInitialization = false;
-    //   return;
-    // }
-
-    if (info.visibleFraction == 0.0) {
-      AdmobAdsPlatform.instance.pauseCollapsibleAdLoad(widget.placement);
-    } else {
-      AdmobAdsPlatform.instance.resumeCollapsibleAdLoad(widget.placement);
-    }
+                  )
+                : _isLoaded == null
+                    ? Container(
+                        height: bottomAdHeight.toDouble(),
+                        color: Colors.grey[50],
+                        padding: const EdgeInsets.all(8),
+                        child: PrimaryShimmer(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Ad',
+                                style: TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              ContainerShimmer(
+                                height: bottomAdHeight.toDouble() - 16,
+                                width: bottomAdHeight.toDouble() - 16,
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ContainerShimmer(
+                                      width: 200,
+                                      height: 20,
+                                    ),
+                                    SizedBox(
+                                      height: 16,
+                                    ),
+                                    ContainerShimmer(
+                                      width: 240,
+                                      height: 20,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : const SizedBox(),
+          );
   }
 }
