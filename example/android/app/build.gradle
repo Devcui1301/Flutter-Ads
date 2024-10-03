@@ -66,12 +66,10 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled true
             resValue("string", "admob_id", "ca-app-pub-3940256099942544~3347511713")
-            resValue("string", "banner_collapsible_id", "ca-app-pub-3940256099942544/2014213617")
         }
 
         debug {
             resValue("string", "admob_id", "ca-app-pub-3940256099942544~3347511713")
-            resValue("string", "banner_collapsible_id", "ca-app-pub-3940256099942544/2014213617")
         }
     }
 
