@@ -49,7 +49,6 @@ class AdmobAds {
 
   //call AdmobAds.instance.openAdInspector();
   void openAdInspector() {
-    MobileAds.instance.initialize();
     MobileAds.instance.openAdInspector((error) {
       // Error will be non-null if ad inspector closed due to an error.
       print("openAdInspector: $error");
@@ -67,6 +66,7 @@ class AdmobAds {
   }
 
   void initialize(AdConstant value, {List<String>? preloadPlacements}) {
+    MobileAds.instance.initialize();
     _adConstant = value;
 
     adConstant.interstitialId.forEach((key, value) {
