@@ -1,16 +1,14 @@
 import 'dart:async';
 
+import 'package:admob_ads/admob_ads.dart';
 import 'package:admob_ads/utils.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:admob_ads/widget/container_shimmer.dart';
 import 'package:admob_ads/widget/primary_shimmer.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:uuid/uuid.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-
-import 'admob_ads.dart';
 
 class AdmobCollapsibleAdWidget extends StatefulWidget {
   final bool isCollapsOnce;
@@ -48,7 +46,7 @@ class AdmobCollapsibleAdWidget extends StatefulWidget {
 class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
   BannerAd? _bannerAd;
   bool? _isLoaded;
-  double bottomAdHeight = 80;
+  int bottomAdHeight = 80;
   Timer? _reloadAdTimer;
   bool _isVisible = false;
   AdRequest? _adRequest;
@@ -58,17 +56,6 @@ class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
   @override
   void initState() {
     super.initState();
-    FlutterView view = WidgetsBinding.instance.platformDispatcher.views.first;
-
-    // Dimensions in logical pixels (dp)
-    Size size = view.physicalSize / view.devicePixelRatio;
-    double height = size.height;
-
-    bottomAdHeight = height <= 400
-        ? 32
-        : height <= 720
-            ? 50
-            : 90;
     Map<String, String>? extras = {
       "collapsible": widget.isBottom ? "bottom" : "top",
     };
@@ -85,16 +72,18 @@ class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
         widget.onAdLoaded?.call();
       },
       onAdFailedToLoad: (ad, err) {
-        ad.dispose();
-        widget.onAdFailedToLoad?.call();
-        setState(() {
-          _isLoaded = false;
-          _reloadAttempts++; // Tăng biến đếm khi load thất bại
-        });
-        if (_reloadAttempts < widget.maxReloadAttempts) {
+        _reloadAttempts++; // Tăng biến đếm khi load thất bại
+        if (_reloadAttempts <= widget.maxReloadAttempts) {
           logger("Ad load failed. Attempting reload #$_reloadAttempts");
-          _loadAd(); // Gọi lại loadAd khi chưa vượt quá giới hạn
+          Future.delayed(Duration(seconds: _reloadAttempts * 2), () {
+            _loadAd();
+          });
         } else {
+          ad.dispose();
+          widget.onAdFailedToLoad?.call();
+          setState(() {
+            _isLoaded = false;
+          });
           logger(
               "Ad failed to load after $_reloadAttempts attempts. No more retries.");
         }
@@ -162,7 +151,6 @@ class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
   void dispose() {
     // Hủy Timer khi widget bị dispose
     _stopAdReloadTimer();
-    _bannerAd?.dispose();
     _bannerAdListener = null;
     _adRequest = null;
     super.dispose();
@@ -176,6 +164,8 @@ class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
     // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
     final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
         MediaQuery.sizeOf(context).width.truncate());
+
+    bottomAdHeight = size?.height ?? 50;
 
     if (size == null) {
       // Unable to get width of anchored banner.
@@ -215,66 +205,77 @@ class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
             key: Key('collapsible-key-${widget.placement}'),
             onVisibilityChanged: _onVisibilityChanged,
             child: (_bannerAd != null && _isLoaded == true)
-                ? Align(
-                    alignment: Alignment.bottomCenter,
-                    child: SafeArea(
-                      child: SizedBox(
-                        width: _bannerAd!.size.width.toDouble(),
-                        height: _bannerAd!.size.height.toDouble(),
-                        child: AdWidget(
-                            key: ValueKey(_bannerAd!.hashCode), ad: _bannerAd!),
-                      ),
-                    ),
+                ? SizedBox(
+                    key: ValueKey(_bannerAd!.hashCode),
+                    width: _bannerAd!.size.width.toDouble(),
+                    height: _bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!),
                   )
                 : _isLoaded == null
-                    ? Container(
-                        height: bottomAdHeight.toDouble(),
-                        color: Colors.grey[50],
-                        padding: const EdgeInsets.all(8),
-                        child: PrimaryShimmer(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Ad',
-                                style: TextStyle(fontStyle: FontStyle.italic),
-                              ),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              ContainerShimmer(
-                                height: bottomAdHeight.toDouble() - 16,
-                                width: bottomAdHeight.toDouble() - 16,
-                              ),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    ContainerShimmer(
-                                      width: 200,
-                                      height: 20,
-                                    ),
-                                    SizedBox(
-                                      height: 16,
-                                    ),
-                                    ContainerShimmer(
-                                      width: 240,
-                                      height: 20,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
+                    ? BannerAdShimmer(bottomAdHeight: bottomAdHeight)
                     : const SizedBox(),
           );
+  }
+}
+
+class BannerAdShimmer extends StatelessWidget {
+  const BannerAdShimmer({
+    super.key,
+    required this.bottomAdHeight,
+  });
+
+  final int bottomAdHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: bottomAdHeight.toDouble(),
+      color: Colors.grey[50],
+      padding: const EdgeInsets.all(8),
+      child: Scaffold(
+        body: PrimaryShimmer(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Ad',
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 14),
+              ),
+              const SizedBox(
+                width: 8,
+              ),
+              ContainerShimmer(
+                height: bottomAdHeight.toDouble() - 16,
+                width: bottomAdHeight.toDouble() - 16,
+              ),
+              const SizedBox(
+                width: 8,
+              ),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ContainerShimmer(
+                      width: 200,
+                      height: 20,
+                    ),
+                    SizedBox(
+                      height: 16,
+                    ),
+                    ContainerShimmer(
+                      width: 240,
+                      height: 20,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(
+                width: 8,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
