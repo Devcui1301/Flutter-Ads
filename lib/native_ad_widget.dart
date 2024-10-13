@@ -54,7 +54,7 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: widget.size == NativeAdSize.fullScreen ? false : true,
       child: _buildPage(context),
     );
   }
