@@ -40,10 +40,10 @@ class AdmobCollapsibleAdWidget extends StatefulWidget {
 
   @override
   State<AdmobCollapsibleAdWidget> createState() =>
-      _SkyCollapsibleAdWidgetState();
+      _AdmobCollapsibleAdWidgetState();
 }
 
-class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
+class _AdmobCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
   BannerAd? _bannerAd;
   bool? _isLoaded;
   int bottomAdHeight = 80;
@@ -157,31 +157,36 @@ class _SkyCollapsibleAdWidgetState extends State<AdmobCollapsibleAdWidget> {
   }
 
   void _loadAd() async {
-    if (AdmobAds.instance.isAdDisable) {
-      return;
+    try {
+      if (AdmobAds.instance.isAdDisable || !mounted) {
+        return;
+      }
+      _bannerAd?.dispose();
+      // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
+      final size =
+          await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+              MediaQuery.sizeOf(context).width.truncate());
+
+      bottomAdHeight = size?.height ?? 50;
+
+      if (size == null) {
+        // Unable to get width of anchored banner.
+        return;
+      }
+
+      BannerAd(
+        adUnitId: kDebugMode
+            ? 'ca-app-pub-3940256099942544/2014213617'
+            : AdmobAds.instance.adConstant
+                    .bannerCollapsibleId[widget.placement] ??
+                "",
+        request: _adRequest ?? const AdRequest(),
+        size: size,
+        listener: _bannerAdListener ?? const BannerAdListener(),
+      ).load();
+    } on Exception catch (e) {
+      logger(e.toString());
     }
-    _bannerAd?.dispose();
-    // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
-    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
-        MediaQuery.sizeOf(context).width.truncate());
-
-    bottomAdHeight = size?.height ?? 50;
-
-    if (size == null) {
-      // Unable to get width of anchored banner.
-      return;
-    }
-
-    BannerAd(
-      adUnitId: kDebugMode
-          ? 'ca-app-pub-3940256099942544/2014213617'
-          : AdmobAds
-                  .instance.adConstant.bannerCollapsibleId[widget.placement] ??
-              "",
-      request: _adRequest ?? const AdRequest(),
-      size: size,
-      listener: _bannerAdListener ?? const BannerAdListener(),
-    ).load();
   }
 
   void _onVisibilityChanged(VisibilityInfo info) {
