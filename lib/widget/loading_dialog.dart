@@ -45,7 +45,7 @@ class LoadingOverlay extends ModalRoute<void> {
   Widget _buildOverlayContent(BuildContext context) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -53,12 +53,6 @@ class LoadingOverlay extends ModalRoute<void> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Lottie.asset(
-              'packages/admob_ads/assets/loading.json',
-              frameRate: const FrameRate(60),
-              width: 80,
-              height: 80,
-            ),
             const Text(
               'Loading Ad...',
               style: TextStyle(
@@ -66,6 +60,12 @@ class LoadingOverlay extends ModalRoute<void> {
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
+            ),
+            Lottie.asset(
+              'packages/admob_ads/assets/loading.json',
+              frameRate: const FrameRate(60),
+              width: 120,
+              height: 120,
             ),
           ],
         ),

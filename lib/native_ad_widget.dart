@@ -167,20 +167,26 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
         onAdLoaded: (Ad ad) {
           logger('.............$NativeAd loaded.');
           error = null;
-          setState(() {
-            _nativeAdIsLoaded = true;
-          });
+          if (mounted) {
+            setState(() {
+              _nativeAdIsLoaded = true;
+            });
+          }
           Future.delayed(const Duration(milliseconds: 700)).then((value) {
-            setState(() {});
+            if (mounted) {
+              setState(() {});
+            }
           });
           widget.onAdLoaded?.call();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           logger('..............$NativeAd failedToLoad: $error');
           ad.dispose();
-          setState(() {
-            this.error = error;
-          });
+          if (mounted) {
+            setState(() {
+              this.error = error;
+            });
+          }
           widget.onAdFailedToLoad?.call();
         },
         onAdOpened: (Ad ad) {
@@ -237,11 +243,15 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
         NativeAdManager manager = AdmobAds.instance.nativeAdManager;
         if (manager.isAdLoaded(widget.preloadIndex!)) {
           _nativeAd = manager.nativeAdList[widget.preloadIndex!];
-          setState(() {
-            _nativeAdIsLoaded = true;
-          });
+          if (mounted) {
+            setState(() {
+              _nativeAdIsLoaded = true;
+            });
+          }
           Future.delayed(const Duration(milliseconds: 700)).then((value) {
-            setState(() {});
+            if (mounted) {
+              setState(() {});
+            }
           });
           AdmobAds.instance.nativeAdManager.nativeAdList[widget.preloadIndex!] =
               null;
