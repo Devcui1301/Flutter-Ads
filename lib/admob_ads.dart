@@ -299,7 +299,6 @@ class AdmobAds {
   void preloadNative(
       {required String placement,
       required NativeAdSize size,
-      required int preloadAdIndex,
       double? adHeight,
       VoidCallback? onAdLoaded,
       VoidCallback? onAdFailedToLoad,
@@ -315,7 +314,6 @@ class AdmobAds {
     nativeAdManager.preloadNative(
         placement: placement,
         size: size,
-        preloadAdIndex: preloadAdIndex,
         adHeight: adHeight,
         onAdClosed: onAdClosed,
         onAdFailedToLoad: onAdFailedToLoad,
@@ -443,18 +441,15 @@ class AdClickedParams {
 }
 
 class NativeAdManager {
-  List<NativeAd?> nativeAdList = [];
-  List<bool> isAdLoadedList = [];
+  Map<String, NativeAd?> nativeAds = <String, NativeAd?>{};
 
-  NativeAdManager() {
-    nativeAdList = List<NativeAd?>.filled(5, null);
-    isAdLoadedList = List<bool>.filled(5, false);
-  }
+  Map<String, bool> isAdLoadeds = <String, bool>{};
+
+  NativeAdManager();
 
   Future<void> preloadNative(
       {required String placement,
       required NativeAdSize size,
-      required int preloadAdIndex,
       double? adHeight,
       VoidCallback? onAdLoaded,
       VoidCallback? onAdFailedToLoad,
@@ -466,7 +461,7 @@ class NativeAdManager {
         String currencyCode,
         AdType adType,
       )? onRevenuePaid}) async {
-    nativeAdList[preloadAdIndex] = NativeAd(
+    nativeAds[placement] = NativeAd(
       adUnitId: AdmobAds.instance.adConstant.nativeId[placement] ?? '',
       request: const AdRequest(),
       nativeAdOptions: size == NativeAdSize.fullScreen
@@ -478,10 +473,10 @@ class NativeAdManager {
         'bg_color': colorToHexString(AdmobAds.instance.nativeDecoration?.color),
         'cta_bg_color': colorToHexString(AdmobAds
             .instance.nativeCallToActionStyle?.backgroundColor
-            ?.resolve(Set.of({WidgetState.pressed}))),
+            ?.resolve(Set.of({MaterialState.pressed}))),
         'cta_text_color': colorToHexString(AdmobAds
             .instance.nativeCallToActionStyle?.foregroundColor
-            ?.resolve(Set.of({WidgetState.pressed}))),
+            ?.resolve(Set.of({MaterialState.pressed}))),
         'title_text_color':
             colorToHexString(AdmobAds.instance.nativeTitleStyle?.color),
         'body_text_color':
@@ -506,14 +501,14 @@ class NativeAdManager {
                   : 'nativeAdFullScreenFactory',
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) {
-          logger('NativeAd $preloadAdIndex loaded.');
-          isAdLoadedList[preloadAdIndex] = true;
+          logger('NativeAd $placement loaded.');
+          isAdLoadeds[placement] = true;
           onAdLoaded?.call();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          logger('NativeAd $preloadAdIndex failed to load: $error');
+          logger('NativeAd $placement failed to load: $error');
           ad.dispose();
-          isAdLoadedList[preloadAdIndex] = false;
+          isAdLoadeds[placement] = false;
           onAdFailedToLoad?.call();
         },
         onAdClosed: (Ad ad) {
@@ -559,7 +554,7 @@ class NativeAdManager {
     )..load();
   }
 
-  bool isAdLoaded(int index) {
-    return isAdLoadedList[index];
+  bool isAdLoaded(String placement) {
+    return isAdLoadeds[placement] ?? false;
   }
 }

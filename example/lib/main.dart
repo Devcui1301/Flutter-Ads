@@ -75,8 +75,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
-    AdmobAds.instance.preloadNative(
-        placement: "native_1", size: NativeAdSize.medium, preloadAdIndex: 0);
+    AdmobAds.instance
+        .preloadNative(placement: "native_1", size: NativeAdSize.medium);
   }
 
   @override

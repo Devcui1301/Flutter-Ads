@@ -25,7 +25,6 @@ class AdmobNativeAdWidget extends StatefulWidget {
     String currencyCode,
     AdType adType,
   )? onRevenuePaid;
-  final int? preloadIndex;
 
   const AdmobNativeAdWidget({
     super.key,
@@ -39,7 +38,6 @@ class AdmobNativeAdWidget extends StatefulWidget {
     this.adBannerColor,
     this.showCloseButton = true,
     this.adHeight,
-    this.preloadIndex,
   });
 
   @override
@@ -137,10 +135,10 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
         'bg_color': colorToHexString(AdmobAds.instance.nativeDecoration?.color),
         'cta_bg_color': colorToHexString(AdmobAds
             .instance.nativeCallToActionStyle?.backgroundColor
-            ?.resolve(Set.of({WidgetState.pressed}))),
+            ?.resolve(Set.of({MaterialState.pressed}))),
         'cta_text_color': colorToHexString(AdmobAds
             .instance.nativeCallToActionStyle?.foregroundColor
-            ?.resolve(Set.of({WidgetState.pressed}))),
+            ?.resolve(Set.of({MaterialState.pressed}))),
         'title_text_color':
             colorToHexString(AdmobAds.instance.nativeTitleStyle?.color),
         'body_text_color':
@@ -172,11 +170,11 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
               _nativeAdIsLoaded = true;
             });
           }
-          Future.delayed(const Duration(milliseconds: 700)).then((value) {
-            if (mounted) {
-              setState(() {});
-            }
-          });
+          // Future.delayed(const Duration(milliseconds: 700)).then((value) {
+          //   if (mounted) {
+          //     setState(() {});
+          //   }
+          // });
           widget.onAdLoaded?.call();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
@@ -239,26 +237,21 @@ class _AdmobNativeAdWidgetState extends State<AdmobNativeAdWidget> {
   @override
   void initState() {
     if (AdmobAds.instance.isAdDisable == false) {
-      if (widget.preloadIndex != null) {
-        NativeAdManager manager = AdmobAds.instance.nativeAdManager;
-        if (manager.isAdLoaded(widget.preloadIndex!)) {
-          _nativeAd = manager.nativeAdList[widget.preloadIndex!];
-          if (mounted) {
-            setState(() {
-              _nativeAdIsLoaded = true;
-            });
-          }
-          Future.delayed(const Duration(milliseconds: 700)).then((value) {
-            if (mounted) {
-              setState(() {});
-            }
+      NativeAdManager manager = AdmobAds.instance.nativeAdManager;
+      if (manager.isAdLoaded(widget.placement)) {
+        _nativeAd = manager.nativeAds[widget.placement];
+        if (mounted) {
+          setState(() {
+            _nativeAdIsLoaded = true;
           });
-          AdmobAds.instance.nativeAdManager.nativeAdList[widget.preloadIndex!] =
-              null;
-          manager.isAdLoadedList[widget.preloadIndex!] = false;
-        } else {
-          _loadAd();
         }
+        // Future.delayed(const Duration(milliseconds: 700)).then((value) {
+        //   if (mounted) {
+        //     setState(() {});
+        //   }
+        // });
+        manager.nativeAds.remove(widget.placement);
+        manager.isAdLoadeds.remove(widget.placement);
       } else {
         _loadAd();
       }

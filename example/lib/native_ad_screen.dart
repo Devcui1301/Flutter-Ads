@@ -83,7 +83,6 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
             ),
             AdmobNativeAdWidget(
               key: UniqueKey(),
-              preloadIndex: 0,
               onAdClicked: () {
                 logger('onAdClicked');
               },
