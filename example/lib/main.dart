@@ -42,24 +42,9 @@ void main() async {
         timeoutLoadAd: const Duration(seconds: 30)),
   );
   MexaAds.instance
-    ..nativeCallToActionStyle = ButtonStyle(
-      backgroundColor: const MaterialStatePropertyAll(Colors.green),
-      shape: MaterialStatePropertyAll(
-        RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      padding: const MaterialStatePropertyAll(
-        EdgeInsets.symmetric(vertical: 15, horizontal: 16),
-      ),
-      elevation: const MaterialStatePropertyAll(0),
-      // textStyle: const MaterialStatePropertyAll(),
-      foregroundColor: const MaterialStatePropertyAll(Colors.white),
-    )
     ..primaryColor = const Color.fromARGB(255, 229, 14, 164)
-    ..nativeDecoration = const BoxDecoration(color: Color(0xff24267E))
-    ..nativeTitleStyle = const TextStyle(color: Colors.white)
-    ..nativeBodyStyle = const TextStyle(color: Colors.white);
+    ..nativeTitleStyle = const TextStyle(color: Colors.black)
+    ..nativeBodyStyle = const TextStyle(color: Colors.black);
   runApp(const MyApp());
 }
 

@@ -15,9 +15,16 @@ class NativeAdWidget extends StatefulWidget {
   final VoidCallback? onAdClosed;
   final NativeAdSize size;
   final String placement;
-  final Color? adBannerColor;
   final bool showCloseButton;
   final double? adHeight;
+  final Color? adBannerColor;
+  final Color? adBackgrounColor;
+  final List<Color>? adCTABackgroundColor;
+  final Color? adCTATextColor;
+  final Color? adTitleTextColor;
+  final Color? adBodyTextColor;
+  final GradientOrientation? gradientOrientation;
+
   final Function(
     Ad ad,
     double valueMicros,
@@ -38,6 +45,12 @@ class NativeAdWidget extends StatefulWidget {
     this.adBannerColor,
     this.showCloseButton = true,
     this.adHeight,
+    this.adBackgrounColor,
+    this.adCTABackgroundColor,
+    this.adCTATextColor,
+    this.adTitleTextColor,
+    this.adBodyTextColor,
+    this.gradientOrientation,
   });
 
   @override
@@ -131,17 +144,16 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
             )
           : null,
       customOptions: {
-        'bg_color': colorToHexString(MexaAds.instance.nativeDecoration?.color),
-        'cta_bg_color': colorToHexString(MexaAds
-            .instance.nativeCallToActionStyle?.backgroundColor
-            ?.resolve(Set.of({WidgetState.pressed}))),
-        'cta_text_color': colorToHexString(MexaAds
-            .instance.nativeCallToActionStyle?.foregroundColor
-            ?.resolve(Set.of({WidgetState.pressed}))),
-        'title_text_color':
-            colorToHexString(MexaAds.instance.nativeTitleStyle?.color),
-        'body_text_color':
-            colorToHexString(MexaAds.instance.nativeBodyStyle?.color),
+        'bg_color': colorToHexString(
+            widget.adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
+        'cta_bg_color': convertColorsToHex(widget.adCTABackgroundColor ??
+            MexaAds.instance.nativeCTABackgroundColor),
+        'cta_text_color': colorToHexString(widget.adCTATextColor ??
+            MexaAds.instance.nativeCTATitleStyle?.color),
+        'title_text_color': colorToHexString(widget.adTitleTextColor ??
+            MexaAds.instance.nativeTitleStyle?.color),
+        'body_text_color': colorToHexString(
+            widget.adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
         'ad_height': widget.adHeight == null
             ? widget.size == NativeAdSize.small
                 ? MexaAds.instance.adConstant.nativeAdHeightSmall.toInt()
@@ -151,7 +163,10 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                         ? (widget.adHeight ?? 120)
                         : -1
             : widget.adHeight!.toInt(),
-        'ad_banner_color': colorToHexString(MexaAds.instance.primaryColor),
+        'ad_banner_color': colorToHexString(
+            widget.adBannerColor ?? MexaAds.instance.primaryColor),
+        'gradient_orientation': gradientOrientationToString(
+            widget.gradientOrientation ?? GradientOrientation.leftToRight)
       }..removeWhere((key, value) => value is String && value.isEmpty),
       factoryId: widget.size == NativeAdSize.small
           ? 'nativeAdSmallFactory'

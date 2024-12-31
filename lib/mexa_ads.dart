@@ -37,10 +37,11 @@ class MexaAds {
   Widget? loadingAdWidget;
 
   // native ad decoration
-  ButtonStyle? nativeCallToActionStyle;
+  Color? nativeBackgroundColor;
+  List<Color>? nativeCTABackgroundColor;
   TextStyle? nativeTitleStyle;
+  TextStyle? nativeCTATitleStyle;
   TextStyle? nativeBodyStyle;
-  BoxDecoration? nativeDecoration;
   Color primaryColor = Colors.orange;
 
   late final Map<String, AdController> _intersAdController = {};
@@ -470,13 +471,11 @@ class NativeAdManager {
             )
           : null,
       customOptions: {
-        'bg_color': colorToHexString(MexaAds.instance.nativeDecoration?.color),
-        'cta_bg_color': colorToHexString(MexaAds
-            .instance.nativeCallToActionStyle?.backgroundColor
-            ?.resolve(Set.of({MaterialState.pressed}))),
-        'cta_text_color': colorToHexString(MexaAds
-            .instance.nativeCallToActionStyle?.foregroundColor
-            ?.resolve(Set.of({MaterialState.pressed}))),
+        'bg_color': colorToHexString(MexaAds.instance.nativeBackgroundColor),
+        'cta_bg_color':
+            convertColorsToHex(MexaAds.instance.nativeCTABackgroundColor),
+        'cta_text_color':
+            colorToHexString(MexaAds.instance.nativeCTATitleStyle?.color),
         'title_text_color':
             colorToHexString(MexaAds.instance.nativeTitleStyle?.color),
         'body_text_color':

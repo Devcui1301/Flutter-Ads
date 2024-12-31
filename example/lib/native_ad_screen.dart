@@ -53,6 +53,14 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => const NativeAdWidget(
+                        adBackgrounColor: Colors.red,
+                        adBodyTextColor: Colors.black,
+                        adTitleTextColor: Colors.amber,
+                        adCTABackgroundColor: [
+                          Colors.red,
+                          Colors.black,
+                          Colors.amber,
+                        ],
                         size: NativeAdSize.fullScreen,
                         placement: 'native_2',
                       ),
@@ -92,10 +100,16 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
               },
               size: size,
               placement: 'native_1',
+              adTitleTextColor:
+                  size == NativeAdSize.fullScreen ? textStyle.color : null,
+              adBodyTextColor:
+                  size == NativeAdSize.fullScreen ? textStyle.color : null,
             ),
           ],
         ),
       ),
     );
   }
+
+  final TextStyle textStyle = TextStyle(color: Colors.white);
 }

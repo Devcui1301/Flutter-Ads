@@ -35,8 +35,7 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
   Widget build(BuildContext context) {
     if (MexaAds.instance.isAdDisable) return const SizedBox();
 
-    if (_bannerAdIsLoaded && _bannerAd != null ||
-        MexaAds.instance.isAdDisable) {
+    if (_bannerAdIsLoaded && _bannerAd != null) {
       return SizedBox(
           width: _bannerAd!.size.width.toDouble(),
           height: _bannerAd!.size.height.toDouble(),
@@ -91,12 +90,11 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadAd();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) {
+        _loadAd();
+      },
+    );
   }
 
   @override
