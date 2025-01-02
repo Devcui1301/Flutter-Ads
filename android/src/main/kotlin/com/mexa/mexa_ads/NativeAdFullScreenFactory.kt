@@ -42,9 +42,9 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
         adView.callToActionView = adView.findViewById(R.id.ad_call_to_action)
         adView.iconView = adView.findViewById(R.id.ad_icon)
 //    adView.priceView = adView.findViewById(R.id.ad_price)
-        adView.starRatingView = adView.findViewById(R.id.rating_bar)
+//        adView.starRatingView = adView.findViewById(R.id.rating_bar)
 //    adView.storeView = adView.findViewById(R.id.ad_store)
-        adView.advertiserView = adView.findViewById(R.id.secondary)
+//        adView.advertiserView = adView.findViewById(R.id.secondary)
 
         // The headline and mediaContent are guaranteed to be in every NativeAd.
         (adView.headlineView as TextView).text = nativeAd?.headline
@@ -87,19 +87,19 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
 //      (adView.storeView as TextView).text = nativeAd.store
         }
 
-        if (nativeAd?.starRating == null) {
-            adView.starRatingView?.visibility = View.GONE
-        } else {
-            (adView.starRatingView as RatingBar).rating = nativeAd.starRating!!.toFloat()
-            adView.starRatingView?.visibility = View.VISIBLE
-        }
+//        if (nativeAd?.starRating == null) {
+//            adView.starRatingView?.visibility = View.GONE
+//        } else {
+//            (adView.starRatingView as RatingBar).rating = nativeAd.starRating!!.toFloat()
+//            adView.starRatingView?.visibility = View.VISIBLE
+//        }
 
-        if (nativeAd?.advertiser == null) {
-            adView.advertiserView?.visibility = View.INVISIBLE
-        } else {
-            adView.advertiserView?.visibility = View.VISIBLE
-            (adView.advertiserView as TextView).text = nativeAd.advertiser
-        }
+//        if (nativeAd?.advertiser == null) {
+//            adView.advertiserView?.visibility = View.INVISIBLE
+//        } else {
+//            adView.advertiserView?.visibility = View.VISIBLE
+//            (adView.advertiserView as TextView).text = nativeAd.advertiser
+//        }
 
         // This method tells the Google Mobile Ads SDK that you have finished populating your
         // native ad view with this native ad.
@@ -112,15 +112,15 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
                 mainAdView.layoutParams.height =
                     ((customOptions["ad_height"] as Int) * Resources.getSystem().displayMetrics.density).toInt()
             }
-//            if (customOptions["bg_color"] != null) {
-//                val wrappedDrawable = DrawableCompat.wrap(
-//                    AdmobAdsPlugin.resources
-//                        .getDrawable(R.drawable.bg_border_radius_8, null)
-//                )
-//                DrawableCompat.setTint(wrappedDrawable, Color.parseColor(customOptions["bg_color"] as String))
-//
-//                mainAdView.background = wrappedDrawable
-//            }
+            if (customOptions["bg_color"] != null) {
+                val wrappedDrawable = DrawableCompat.wrap(
+                    MexaAdsPlugin.resources
+                        .getDrawable(R.drawable.bg_border_radius_8, null)
+                )
+                DrawableCompat.setTint(wrappedDrawable, Color.parseColor(customOptions["bg_color"] as String))
+
+                mainAdView.background = wrappedDrawable
+            }
             if (customOptions["cta_bg_color"] != null) {
                 val colors = customOptions["cta_bg_color"] as List<String>
 
@@ -183,16 +183,16 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
                     Color.parseColor(customOptions["cta_text_color"] as String)
                 )
             }
-            if (customOptions["ad_banner_color"] != null) {
-                val wrappedDrawable = DrawableCompat.wrap(
-                    MexaAdsPlugin.resources
-                        .getDrawable(R.drawable.bg_text_ad_no_border, null)
-                )
-                DrawableCompat.setTint(wrappedDrawable, Color.parseColor(customOptions["ad_banner_color"] as String))
-                (adView.findViewById(R.id.ad_banner) as TextView).background =
-                    wrappedDrawable
-
-            }
+//            if (customOptions["ad_banner_color"] != null) {
+//                val wrappedDrawable = DrawableCompat.wrap(
+//                    MexaAdsPlugin.resources
+//                        .getDrawable(R.drawable.bg_text_ad_no_border, null)
+//                )
+//                DrawableCompat.setTint(wrappedDrawable, Color.parseColor(customOptions["ad_banner_color"] as String))
+//                (adView.findViewById(R.id.ad_banner) as TextView).background =
+//                    wrappedDrawable
+//
+//            }
 
         }
 

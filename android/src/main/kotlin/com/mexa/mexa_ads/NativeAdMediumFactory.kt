@@ -40,7 +40,7 @@ class NativeAdMediumFactory : GoogleMobileAdsPlugin.NativeAdFactory {
         adView.bodyView = adView.findViewById(R.id.ad_body)
         adView.callToActionView = adView.findViewById(R.id.ad_call_to_action)
         adView.iconView = adView.findViewById(R.id.ad_icon)
-        adView.advertiserView = adView.findViewById(R.id.ad_advertiser)
+//        adView.advertiserView = adView.findViewById(R.id.ad_advertiser)
 //    adView.priceView = adView.findViewById(R.id.ad_price)
 //        adView.starRatingView = adView.findViewById(R.id.rating_bar)
 //    adView.storeView = adView.findViewById(R.id.ad_store)
