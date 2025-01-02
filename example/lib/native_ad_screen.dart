@@ -11,7 +11,7 @@ class NativeAdScreen extends StatefulWidget {
 }
 
 class _NativeAdScreenState extends State<NativeAdScreen> {
-  NativeAdSize size = NativeAdSize.square;
+  NativeAdSize size = NativeAdSize.medium;
 
   @override
   Widget build(BuildContext context) {
@@ -111,5 +111,5 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
     );
   }
 
-  final TextStyle textStyle = TextStyle(color: Colors.white);
+  final TextStyle textStyle = const TextStyle(color: Colors.white);
 }

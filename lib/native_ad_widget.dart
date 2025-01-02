@@ -438,22 +438,15 @@ class FullScreenNativeAdShimmer extends StatelessWidget {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Center(
-              child: CircularProgressIndicator(
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 4,
-          ),
           PrimaryShimmer(
             baseColor: Color.fromARGB(255, 180, 180, 180),
             highlightColor: Color.fromARGB(255, 80, 80, 80),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(
+                  height: 12,
+                ),
                 PrimaryShimmer(
                   child: ContainerShimmer(
                     width: 50,
@@ -502,8 +495,15 @@ class FullScreenNativeAdShimmer extends StatelessWidget {
             baseColor: Color.fromARGB(255, 180, 180, 180),
             highlightColor: Color.fromARGB(255, 80, 80, 80),
             child: ContainerShimmer(
-              height: 20,
+              height: 30,
               width: 300,
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: CircularProgressIndicator(
+                color: Colors.grey,
+              ),
             ),
           ),
           SizedBox(
@@ -513,7 +513,7 @@ class FullScreenNativeAdShimmer extends StatelessWidget {
             baseColor: Color.fromARGB(255, 180, 180, 180),
             highlightColor: Color.fromARGB(255, 80, 80, 80),
             child: ContainerShimmer(
-              height: 32,
+              height: 50,
               width: double.infinity,
             ),
           ),

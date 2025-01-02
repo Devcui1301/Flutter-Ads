@@ -301,6 +301,13 @@ class MexaAds {
       {required String placement,
       required NativeAdSize size,
       double? adHeight,
+      final Color? adBannerColor,
+      final Color? adBackgrounColor,
+      final List<Color>? adCTABackgroundColor,
+      final Color? adCTATextColor,
+      final Color? adTitleTextColor,
+      final Color? adBodyTextColor,
+      final GradientOrientation? gradientOrientation,
       VoidCallback? onAdLoaded,
       VoidCallback? onAdFailedToLoad,
       VoidCallback? onAdClicked,
@@ -313,13 +320,21 @@ class MexaAds {
         AdType adType,
       )? onRevenuePaid}) {
     nativeAdManager.preloadNative(
-        placement: placement,
-        size: size,
-        adHeight: adHeight,
-        onAdClosed: onAdClosed,
-        onAdFailedToLoad: onAdFailedToLoad,
-        onAdLoaded: onAdLoaded,
-        onRevenuePaid: onRevenuePaid);
+      placement: placement,
+      size: size,
+      adHeight: adHeight,
+      onAdClosed: onAdClosed,
+      onAdFailedToLoad: onAdFailedToLoad,
+      onAdLoaded: onAdLoaded,
+      onRevenuePaid: onRevenuePaid,
+      adBannerColor: adBannerColor,
+      adBackgrounColor: adBackgrounColor,
+      adCTABackgroundColor: adCTABackgroundColor,
+      adCTATextColor: adCTATextColor,
+      adTitleTextColor: adTitleTextColor,
+      adBodyTextColor: adBodyTextColor,
+      gradientOrientation: gradientOrientation,
+    );
   }
 }
 
@@ -452,6 +467,13 @@ class NativeAdManager {
       {required String placement,
       required NativeAdSize size,
       double? adHeight,
+      final Color? adBannerColor,
+      final Color? adBackgrounColor,
+      final List<Color>? adCTABackgroundColor,
+      final Color? adCTATextColor,
+      final Color? adTitleTextColor,
+      final Color? adBodyTextColor,
+      final GradientOrientation? gradientOrientation,
       VoidCallback? onAdLoaded,
       VoidCallback? onAdFailedToLoad,
       VoidCallback? onAdClosed,
@@ -471,15 +493,16 @@ class NativeAdManager {
             )
           : null,
       customOptions: {
-        'bg_color': colorToHexString(MexaAds.instance.nativeBackgroundColor),
-        'cta_bg_color':
-            convertColorsToHex(MexaAds.instance.nativeCTABackgroundColor),
-        'cta_text_color':
-            colorToHexString(MexaAds.instance.nativeCTATitleStyle?.color),
-        'title_text_color':
-            colorToHexString(MexaAds.instance.nativeTitleStyle?.color),
-        'body_text_color':
-            colorToHexString(MexaAds.instance.nativeBodyStyle?.color),
+        'bg_color': colorToHexString(
+            adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
+        'cta_bg_color': convertColorsToHex(
+            adCTABackgroundColor ?? MexaAds.instance.nativeCTABackgroundColor),
+        'cta_text_color': colorToHexString(
+            adCTATextColor ?? MexaAds.instance.nativeCTATitleStyle?.color),
+        'title_text_color': colorToHexString(
+            adTitleTextColor ?? MexaAds.instance.nativeTitleStyle?.color),
+        'body_text_color': colorToHexString(
+            adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
         'ad_height': adHeight == null
             ? size == NativeAdSize.small
                 ? MexaAds.instance.adConstant.nativeAdHeightSmall.toInt()
@@ -489,7 +512,10 @@ class NativeAdManager {
                         ? (adHeight ?? 120)
                         : -1
             : adHeight.toInt(),
-        'ad_banner_color': colorToHexString(MexaAds.instance.primaryColor),
+        'ad_banner_color':
+            colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
+        'gradient_orientation': gradientOrientationToString(
+            gradientOrientation ?? GradientOrientation.leftToRight)
       }..removeWhere((key, value) => value is String && value.isEmpty),
       factoryId: size == NativeAdSize.small
           ? 'nativeAdSmallFactory'
