@@ -93,7 +93,9 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
             : widget.size == NativeAdSize.medium
                 ? widget.adHeight ??
                     MexaAds.instance.adConstant.nativeAdHeightMedium
-                : widget.adHeight ?? 120,
+                : widget.size == NativeAdSize.noMedia
+                    ? widget.adHeight ?? 100
+                    : widget.adHeight ?? 120,
         child: widget.size == NativeAdSize.fullScreen
             ? Scaffold(
                 body: Stack(
@@ -131,7 +133,9 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         ? const FullScreenNativeAdShimmer()
         : widget.size == NativeAdSize.medium
             ? const MediumNativeAdShimmer()
-            : const SmallNativeAdShimmer();
+            : widget.size == NativeAdSize.small
+                ? const SmallNativeAdShimmer()
+                : const NoMediaNativeAdShimmer();
   }
 
   void _loadAd() {
@@ -174,7 +178,9 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
               ? 'nativeAdMediumFactory'
               : widget.size == NativeAdSize.square
                   ? 'nativeAdSquareFactory'
-                  : 'nativeAdFullScreenFactory',
+                  : widget.size == NativeAdSize.fullScreen
+                      ? 'nativeAdFullScreenFactory'
+                      : 'nativeAdNoMediaFactory',
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) {
           logger('.............$NativeAd loaded.');
@@ -518,6 +524,60 @@ class FullScreenNativeAdShimmer extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class NoMediaNativeAdShimmer extends StatelessWidget {
+  const NoMediaNativeAdShimmer({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      width: double.infinity,
+      color: Colors.white,
+      child: const PrimaryShimmer(
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ContainerShimmer(
+                  width: 40,
+                  height: 40,
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ContainerShimmer(
+                        width: 160,
+                        height: 16,
+                      ),
+                      SizedBox(height: 8),
+                      ContainerShimmer(
+                        width: double.infinity,
+                        height: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            ContainerShimmer(
+              width: double.infinity,
+              height: 45,
+            ),
+          ],
+        ),
       ),
     );
   }

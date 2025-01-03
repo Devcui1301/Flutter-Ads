@@ -61,11 +61,17 @@ class LoadingOverlay extends ModalRoute<void> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            Lottie.asset(
-              'packages/mexa_ads/assets/loading.json',
-              frameRate: const FrameRate(60),
-              width: 120,
-              height: 120,
+            const SizedBox(
+              height: 10,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Lottie.asset(
+                'packages/mexa_ads/assets/loading.json',
+                frameRate: const FrameRate(60),
+                width: 80,
+                height: 80,
+              ),
             ),
           ],
         ),

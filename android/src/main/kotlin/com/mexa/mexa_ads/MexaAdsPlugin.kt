@@ -53,6 +53,11 @@ class MexaAdsPlugin : FlutterPlugin, MethodCallHandler {
             "nativeAdFullScreenFactory",
             NativeAdFullScreenFactory(LayoutInflater.from(flutterPluginBinding.applicationContext))
         )
+        GoogleMobileAdsPlugin.registerNativeAdFactory(
+            flutterPluginBinding.flutterEngine,
+            "nativeAdNoMediaFactory",
+            NativeAdNoMediaFactory(LayoutInflater.from(flutterPluginBinding.applicationContext))
+        )
     }
 
 

@@ -24,62 +24,79 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
             BackButton(
               onPressed: () => Navigator.of(context).pop(),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      size = NativeAdSize.medium;
-                    });
-                  },
-                  child: const Text("Medium"),
+            SizedBox(
+              height: 60,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          size = NativeAdSize.medium;
+                        });
+                      },
+                      child: const Text("Medium"),
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          size = NativeAdSize.small;
+                        });
+                      },
+                      child: const Text("Small"),
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const NativeAdWidget(
+                            adBackgrounColor: Colors.red,
+                            adBodyTextColor: Colors.black,
+                            adTitleTextColor: Colors.amber,
+                            adCTABackgroundColor: [
+                              Colors.red,
+                              Colors.black,
+                              Colors.amber,
+                            ],
+                            size: NativeAdSize.fullScreen,
+                            placement: 'native_2',
+                          ),
+                        ));
+                      },
+                      child: const Text("FullScreen"),
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          size = NativeAdSize.square;
+                        });
+                      },
+                      child: const Text("Square"),
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          size = NativeAdSize.noMedia;
+                        });
+                      },
+                      child: const Text("No media"),
+                    ),
+                  ],
                 ),
-                const SizedBox(
-                  width: 8,
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      size = NativeAdSize.small;
-                    });
-                  },
-                  child: const Text("Small"),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const NativeAdWidget(
-                        adBackgrounColor: Colors.red,
-                        adBodyTextColor: Colors.black,
-                        adTitleTextColor: Colors.amber,
-                        adCTABackgroundColor: [
-                          Colors.red,
-                          Colors.black,
-                          Colors.amber,
-                        ],
-                        size: NativeAdSize.fullScreen,
-                        placement: 'native_2',
-                      ),
-                    ));
-                  },
-                  child: const Text("FullScreen"),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      size = NativeAdSize.square;
-                    });
-                  },
-                  child: const Text("Square"),
-                ),
-              ],
+              ),
             ),
             const SizedBox(
               height: 8,

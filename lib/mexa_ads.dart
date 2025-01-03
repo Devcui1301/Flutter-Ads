@@ -370,7 +370,7 @@ class AdConstant {
   });
 }
 
-enum NativeAdSize { small, medium, square, fullScreen }
+enum NativeAdSize { small, medium, square, fullScreen, noMedia }
 
 enum AdType {
   banner,
