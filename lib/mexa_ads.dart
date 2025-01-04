@@ -351,8 +351,11 @@ class AdConstant {
   final Duration interstitialOffsetTime;
   final Duration appOpenOffsetTime;
   final Duration timeoutLoadAd;
-  double nativeAdHeightSmall;
-  double nativeAdHeightMedium;
+  double nativeAdHeightLayout1;
+  double nativeAdHeightLayout2;
+  double nativeAdHeightLayout3;
+  double nativeAdHeightLayout4;
+  double nativeAdHeightLayoutNoMedia;
 
   AdConstant({
     this.bannerAnchorId = const {},
@@ -365,12 +368,15 @@ class AdConstant {
     this.interstitialOffsetTime = const Duration(seconds: 30),
     this.appOpenOffsetTime = const Duration(seconds: 30),
     this.timeoutLoadAd = const Duration(seconds: 30),
-    this.nativeAdHeightMedium = 280,
-    this.nativeAdHeightSmall = 160,
+    this.nativeAdHeightLayout1 = 280,
+    this.nativeAdHeightLayout2 = 200,
+    this.nativeAdHeightLayout3 = 240,
+    this.nativeAdHeightLayout4 = 160,
+    this.nativeAdHeightLayoutNoMedia = 80,
   });
 }
 
-enum NativeAdSize { small, medium, square, fullScreen, noMedia }
+enum NativeAdSize { layout1, layout2, layout3, layout4, fullScreen, noMedia }
 
 enum AdType {
   banner,
@@ -504,26 +510,38 @@ class NativeAdManager {
         'body_text_color': colorToHexString(
             adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
         'ad_height': adHeight == null
-            ? size == NativeAdSize.small
-                ? MexaAds.instance.adConstant.nativeAdHeightSmall.toInt()
-                : size == NativeAdSize.medium
-                    ? MexaAds.instance.adConstant.nativeAdHeightMedium.toInt()
-                    : size == NativeAdSize.square
-                        ? (adHeight ?? 120)
-                        : -1
+            ? size == NativeAdSize.layout1
+                ? MexaAds.instance.adConstant.nativeAdHeightLayout1.toInt()
+                : size == NativeAdSize.layout2
+                    ? MexaAds.instance.adConstant.nativeAdHeightLayout2.toInt()
+                    : size == NativeAdSize.layout3
+                        ? MexaAds.instance.adConstant.nativeAdHeightLayout3
+                            .toInt()
+                        : size == NativeAdSize.layout4
+                            ? MexaAds.instance.adConstant.nativeAdHeightLayout4
+                                .toInt()
+                            : size == NativeAdSize.noMedia
+                                ? MexaAds.instance.adConstant
+                                    .nativeAdHeightLayoutNoMedia
+                                    .toInt()
+                                : -1
             : adHeight.toInt(),
         'ad_banner_color':
             colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
         'gradient_orientation': gradientOrientationToString(
             gradientOrientation ?? GradientOrientation.leftToRight)
       }..removeWhere((key, value) => value is String && value.isEmpty),
-      factoryId: size == NativeAdSize.small
-          ? 'nativeAdSmallFactory'
-          : size == NativeAdSize.medium
-              ? 'nativeAdMediumFactory'
-              : size == NativeAdSize.square
-                  ? 'nativeAdSquareFactory'
-                  : 'nativeAdFullScreenFactory',
+      factoryId: size == NativeAdSize.layout1
+          ? 'nativeLayout1Factory'
+          : size == NativeAdSize.layout2
+              ? 'nativeLayout2Factory'
+              : size == NativeAdSize.layout3
+                  ? 'nativeLayout3Factory'
+                  : size == NativeAdSize.layout4
+                      ? 'nativeLayout4Factory'
+                      : size == NativeAdSize.noMedia
+                          ? 'nativeAdNoMediaFactory'
+                          : 'nativeAdFullScreenFactory',
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) {
           logger('NativeAd $placement loaded.');

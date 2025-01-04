@@ -62,7 +62,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     MexaAds.instance.preloadNative(
       placement: "native_1",
-      size: NativeAdSize.medium,
+      size: NativeAdSize.layout1,
       adCTABackgroundColor: [Color(0xffFFA17A), Color(0xffB50AC1)],
       gradientOrientation: GradientOrientation.leftToRight,
     );
@@ -113,7 +113,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    MexaAds.instance.adConstant.nativeAdHeightMedium =
+    MexaAds.instance.adConstant.nativeAdHeightLayout1 =
         MediaQuery.of(context).size.height * 3 / 10;
     return MaterialApp(
       navigatorKey: navKey,

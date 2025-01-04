@@ -38,7 +38,7 @@ class NativeAdWidget extends StatefulWidget {
     required this.placement,
     this.onAdLoaded,
     this.onAdFailedToLoad,
-    this.size = NativeAdSize.medium,
+    this.size = NativeAdSize.layout1,
     this.onAdClicked,
     this.onAdClosed,
     this.onRevenuePaid,
@@ -88,14 +88,23 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
     }
     if (_nativeAdIsLoaded && _nativeAd != null) {
       return SizedBox(
-        height: widget.size == NativeAdSize.small
-            ? widget.adHeight ?? MexaAds.instance.adConstant.nativeAdHeightSmall
-            : widget.size == NativeAdSize.medium
+        height: widget.size == NativeAdSize.layout1
+            ? widget.adHeight ??
+                MexaAds.instance.adConstant.nativeAdHeightLayout1
+            : widget.size == NativeAdSize.layout2
                 ? widget.adHeight ??
-                    MexaAds.instance.adConstant.nativeAdHeightMedium
-                : widget.size == NativeAdSize.noMedia
-                    ? widget.adHeight ?? 100
-                    : widget.adHeight ?? 120,
+                    MexaAds.instance.adConstant.nativeAdHeightLayout2
+                : widget.size == NativeAdSize.layout3
+                    ? widget.adHeight ??
+                        MexaAds.instance.adConstant.nativeAdHeightLayout3
+                    : widget.size == NativeAdSize.layout4
+                        ? widget.adHeight ??
+                            MexaAds.instance.adConstant.nativeAdHeightLayout4
+                        : widget.size == NativeAdSize.noMedia
+                            ? widget.adHeight ??
+                                MexaAds.instance.adConstant
+                                    .nativeAdHeightLayoutNoMedia
+                            : 100,
         child: widget.size == NativeAdSize.fullScreen
             ? Scaffold(
                 body: Stack(
@@ -131,11 +140,15 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
     }
     return widget.size == NativeAdSize.fullScreen
         ? const FullScreenNativeAdShimmer()
-        : widget.size == NativeAdSize.medium
-            ? const MediumNativeAdShimmer()
-            : widget.size == NativeAdSize.small
-                ? const SmallNativeAdShimmer()
-                : const NoMediaNativeAdShimmer();
+        : widget.size == NativeAdSize.layout1
+            ? const NativeLayout1Shimmer()
+            : widget.size == NativeAdSize.layout2
+                ? const NativeLayout2Shimmer()
+                : widget.size == NativeAdSize.layout3
+                    ? const NativeLayout3Shimmer()
+                    : widget.size == NativeAdSize.layout4
+                        ? const NativeLayout4Shimmer()
+                        : const NoMediaNativeAdShimmer();
   }
 
   void _loadAd() {
@@ -159,28 +172,38 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         'body_text_color': colorToHexString(
             widget.adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
         'ad_height': widget.adHeight == null
-            ? widget.size == NativeAdSize.small
-                ? MexaAds.instance.adConstant.nativeAdHeightSmall.toInt()
-                : widget.size == NativeAdSize.medium
-                    ? MexaAds.instance.adConstant.nativeAdHeightMedium.toInt()
-                    : widget.size == NativeAdSize.square
-                        ? (widget.adHeight ?? 120)
-                        : -1
+            ? widget.size == NativeAdSize.layout1
+                ? MexaAds.instance.adConstant.nativeAdHeightLayout1.toInt()
+                : widget.size == NativeAdSize.layout2
+                    ? MexaAds.instance.adConstant.nativeAdHeightLayout2.toInt()
+                    : widget.size == NativeAdSize.layout3
+                        ? MexaAds.instance.adConstant.nativeAdHeightLayout3
+                            .toInt()
+                        : widget.size == NativeAdSize.layout4
+                            ? MexaAds.instance.adConstant.nativeAdHeightLayout4
+                                .toInt()
+                            : widget.size == NativeAdSize.noMedia
+                                ? MexaAds.instance.adConstant
+                                    .nativeAdHeightLayoutNoMedia
+                                    .toInt()
+                                : -1
             : widget.adHeight!.toInt(),
         'ad_banner_color': colorToHexString(
             widget.adBannerColor ?? MexaAds.instance.primaryColor),
         'gradient_orientation': gradientOrientationToString(
             widget.gradientOrientation ?? GradientOrientation.leftToRight)
       }..removeWhere((key, value) => value is String && value.isEmpty),
-      factoryId: widget.size == NativeAdSize.small
-          ? 'nativeAdSmallFactory'
-          : widget.size == NativeAdSize.medium
-              ? 'nativeAdMediumFactory'
-              : widget.size == NativeAdSize.square
-                  ? 'nativeAdSquareFactory'
-                  : widget.size == NativeAdSize.fullScreen
-                      ? 'nativeAdFullScreenFactory'
-                      : 'nativeAdNoMediaFactory',
+      factoryId: widget.size == NativeAdSize.layout1
+          ? 'nativeLayout1Factory'
+          : widget.size == NativeAdSize.layout2
+              ? 'nativeLayout2Factory'
+              : widget.size == NativeAdSize.layout3
+                  ? 'nativeLayout3Factory'
+                  : widget.size == NativeAdSize.layout4
+                      ? 'nativeLayout4Factory'
+                      : widget.size == NativeAdSize.noMedia
+                          ? 'nativeAdNoMediaFactory'
+                          : 'nativeAdFullScreenFactory',
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) {
           logger('.............$NativeAd loaded.');
@@ -286,9 +309,11 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
   }
 }
 
-class SmallNativeAdShimmer extends StatelessWidget {
-  const SmallNativeAdShimmer({
+class NativeLayout1Shimmer extends StatelessWidget {
+  final double? adHeight;
+  const NativeLayout1Shimmer({
     super.key,
+    this.adHeight,
   });
 
   @override
@@ -297,71 +322,7 @@ class SmallNativeAdShimmer extends StatelessWidget {
       padding: const EdgeInsets.all(10.0),
       width: double.infinity,
       color: Colors.white,
-      height: MexaAds.instance.adConstant.nativeAdHeightSmall,
-      child: const PrimaryShimmer(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ContainerShimmer(
-              width: 100,
-              height: 100,
-            ),
-            SizedBox(
-              width: 10,
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ContainerShimmer(
-                    width: 160,
-                    height: 25,
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    children: [
-                      PrimaryShimmer(
-                        child: Row(
-                          children: [
-                            Text('Ad', style: TextStyle(fontSize: 12)),
-                            SizedBox(width: 10),
-                            Icon(Icons.star, size: 12),
-                            Icon(Icons.star, size: 12),
-                            Icon(Icons.star, size: 12),
-                            Icon(Icons.star, size: 12),
-                            Icon(Icons.star, size: 12),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  ContainerShimmer(
-                    width: double.infinity,
-                    height: 35,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class MediumNativeAdShimmer extends StatelessWidget {
-  const MediumNativeAdShimmer({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(5.0),
-      width: double.infinity,
-      color: Colors.white,
-      height: MexaAds.instance.adConstant.nativeAdHeightMedium,
+      height: adHeight ?? MexaAds.instance.adConstant.nativeAdHeightLayout1,
       child: const PrimaryShimmer(
         child: Column(
           children: [
@@ -381,25 +342,145 @@ class MediumNativeAdShimmer extends StatelessWidget {
                     children: [
                       ContainerShimmer(
                         width: 160,
-                        height: 25,
+                        height: 20,
                       ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          PrimaryShimmer(
-                            child: Row(
-                              children: [
-                                Text('Ad', style: TextStyle(fontSize: 12)),
-                                SizedBox(width: 10),
-                                Icon(Icons.star, size: 12),
-                                Icon(Icons.star, size: 12),
-                                Icon(Icons.star, size: 12),
-                                Icon(Icons.star, size: 12),
-                                Icon(Icons.star, size: 12),
-                              ],
+                      SizedBox(height: 10),
+                      ContainerShimmer(
+                        width: double.infinity,
+                        height: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Expanded(child: ContainerShimmer()),
+            SizedBox(
+              height: 10,
+            ),
+            ContainerShimmer(
+              width: double.infinity,
+              height: 50,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NativeLayout2Shimmer extends StatelessWidget {
+  final double? adHeight;
+  const NativeLayout2Shimmer({
+    super.key,
+    this.adHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(5.0),
+      width: double.infinity,
+      color: Colors.white,
+      height: adHeight ?? MexaAds.instance.adConstant.nativeAdHeightLayout2,
+      child: const PrimaryShimmer(
+        child: Column(
+          children: [
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            ContainerShimmer(
+                              width: 40,
+                              height: 40,
                             ),
-                          ),
-                        ],
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: ContainerShimmer(
+                                height: 25,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        ContainerShimmer(
+                          height: 50,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Expanded(flex: 1, child: ContainerShimmer())
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            ContainerShimmer(
+              height: 50,
+              width: double.infinity,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NativeLayout3Shimmer extends StatelessWidget {
+  final double? adHeight;
+  const NativeLayout3Shimmer({
+    super.key,
+    this.adHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(5.0),
+      width: double.infinity,
+      color: Colors.white,
+      height: adHeight ?? MexaAds.instance.adConstant.nativeAdHeightLayout3,
+      child: const PrimaryShimmer(
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ContainerShimmer(
+                  width: 50,
+                  height: 50,
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ContainerShimmer(
+                        width: 160,
+                        height: 20,
+                      ),
+                      SizedBox(height: 10),
+                      ContainerShimmer(
+                        width: double.infinity,
+                        height: 20,
                       ),
                     ],
                   ),
@@ -408,15 +489,85 @@ class MediumNativeAdShimmer extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
+                padding: EdgeInsets.all(8),
                 child: ContainerShimmer(
                   width: double.infinity,
                 ),
               ),
             ),
-            ContainerShimmer(
-              height: 32,
-              width: double.infinity,
+            Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Align(
+                  alignment: Alignment.centerRight,
+                  child: ContainerShimmer(height: 50, width: 100)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NativeLayout4Shimmer extends StatelessWidget {
+  final double? adHeight;
+  const NativeLayout4Shimmer({
+    super.key,
+    this.adHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(5.0),
+      width: double.infinity,
+      color: Colors.white,
+      height: adHeight ?? MexaAds.instance.adConstant.nativeAdHeightLayout4,
+      child: const PrimaryShimmer(
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      ContainerShimmer(
+                        width: 50,
+                        height: 50,
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Expanded(
+                        child: ContainerShimmer(
+                          height: 30,
+                        ),
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Expanded(
+                    child: ContainerShimmer(),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  ContainerShimmer(
+                    width: double.infinity,
+                    height: 40,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: 10,
+            ),
+            Expanded(
+              child: ContainerShimmer(
+                width: double.infinity,
+              ),
             ),
           ],
         ),
@@ -530,8 +681,10 @@ class FullScreenNativeAdShimmer extends StatelessWidget {
 }
 
 class NoMediaNativeAdShimmer extends StatelessWidget {
+  final double? adHeight;
   const NoMediaNativeAdShimmer({
     super.key,
+    this.adHeight,
   });
 
   @override
@@ -539,42 +692,39 @@ class NoMediaNativeAdShimmer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10.0),
       width: double.infinity,
+      height:
+          adHeight ?? MexaAds.instance.adConstant.nativeAdHeightLayoutNoMedia,
       color: Colors.white,
       child: const PrimaryShimmer(
-        child: Column(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ContainerShimmer(
-                  width: 40,
-                  height: 40,
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ContainerShimmer(
-                        width: 160,
-                        height: 16,
-                      ),
-                      SizedBox(height: 8),
-                      ContainerShimmer(
-                        width: double.infinity,
-                        height: 16,
-                      ),
-                    ],
+            Expanded(
+              flex: 5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: ContainerShimmer(
+                      width: 160,
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(height: 8),
+                  Expanded(
+                    child: ContainerShimmer(
+                      width: double.infinity,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 8),
-            ContainerShimmer(
-              width: double.infinity,
-              height: 45,
+            SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: ContainerShimmer(
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
           ],
         ),

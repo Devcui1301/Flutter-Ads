@@ -13,10 +13,9 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.drawable.DrawableCompat
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
-import com.mexa.mexa_ads.R
 import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
 
-class NativeAdSmallFactory : GoogleMobileAdsPlugin.NativeAdFactory {
+class NativeLayout4Factory : GoogleMobileAdsPlugin.NativeAdFactory {
     private var layoutInflater: LayoutInflater
 
     constructor(layoutInflater: LayoutInflater) {
@@ -29,7 +28,7 @@ class NativeAdSmallFactory : GoogleMobileAdsPlugin.NativeAdFactory {
         customOptions: MutableMap<String, Any>?
     ): NativeAdView {
 
-        val adView = layoutInflater.inflate(R.layout.native_ad_small, null) as NativeAdView
+        val adView = layoutInflater.inflate(R.layout.native_layout_4, null) as NativeAdView
 
 //         Set the media view.
         adView.mediaView = adView.findViewById(R.id.ad_media)

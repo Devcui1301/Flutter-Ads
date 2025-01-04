@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 class ContainerShimmer extends StatelessWidget {
   const ContainerShimmer({
     Key? key,
-    this.width = 100,
-    this.height = 20,
+    this.width,
+    this.height,
   }) : super(key: key);
 
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {

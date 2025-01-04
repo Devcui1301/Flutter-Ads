@@ -17,41 +17,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-
+        <TextView
+            android:id="@+id/ad_banner"
+            android:layout_width="wrap_content"
+            android:layout_height="16dp"
+            android:background="@drawable/bg_text_ad"
+            android:gravity="center"
+            android:paddingHorizontal="6dp"
+            android:text="@string/ad"
+            android:textColor="@color/gnt_white"
+            android:textSize="8sp"
+            android:textStyle="italic"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/middle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginHorizontal="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-            <TextView
-                android:id="@+id/ad_banner"
-                android:layout_width="wrap_content"
-                android:layout_height="16dp"
-                android:background="@drawable/bg_text_ad"
-                android:gravity="center"
-                android:paddingHorizontal="6dp"
-                android:text="@string/ad"
-                android:textColor="@color/gnt_white"
-                android:textSize="8sp"
-                android:textStyle="italic"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <ImageView
-                android:id="@+id/ad_icon"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginBottom="@dimen/gnt_no_margin"
-                android:layout_weight="0"
-                android:layout_marginStart="4dp"
-                android:scaleType="fitCenter"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintDimensionRatio="H,1:1"
-                app:layout_constraintStart_toEndOf="@id/ad_banner"
-                app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/ad_banner">
 
             <TextView
                 android:id="@+id/ad_headline"
@@ -63,8 +52,9 @@
                 android:textColor="@color/gnt_black"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                app:layout_constraintStart_toEndOf="@+id/ad_icon"
+                app:layout_constraintEnd_toStartOf="@+id/ad_call_to_action"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
@@ -77,27 +67,26 @@
                 android:maxLines="2"
                 android:textColor="#272727"
                 android:textSize="11sp"
-
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/ad_icon"
+                app:layout_constraintEnd_toStartOf="@+id/ad_call_to_action"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/ad_headline" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/ad_call_to_action"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:background="@drawable/bg_border_radius_8"
+                android:gravity="center"
+                android:lines="1"
+                android:paddingVertical="14dp"
+                android:paddingHorizontal="16dp"
+                android:textColor="@color/gnt_white"
+                android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                />
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/ad_call_to_action"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="4dp"
-            android:background="@drawable/bg_border_radius_8"
-            android:gravity="center"
-            android:lines="1"
-            android:paddingVertical="14dp"
-            android:textColor="@color/gnt_white"
-            android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/middle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.gms.ads.nativead.NativeAdView>

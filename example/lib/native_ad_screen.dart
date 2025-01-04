@@ -11,7 +11,7 @@ class NativeAdScreen extends StatefulWidget {
 }
 
 class _NativeAdScreenState extends State<NativeAdScreen> {
-  NativeAdSize size = NativeAdSize.medium;
+  NativeAdSize size = NativeAdSize.layout1;
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +34,10 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          size = NativeAdSize.medium;
+                          size = NativeAdSize.layout1;
                         });
                       },
-                      child: const Text("Medium"),
+                      child: const Text("Layout1"),
                     ),
                     const SizedBox(
                       width: 8,
@@ -45,10 +45,10 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          size = NativeAdSize.small;
+                          size = NativeAdSize.layout2;
                         });
                       },
-                      child: const Text("Small"),
+                      child: const Text("Layout2"),
                     ),
                     const SizedBox(
                       width: 8,
@@ -78,10 +78,21 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          size = NativeAdSize.square;
+                          size = NativeAdSize.layout3;
                         });
                       },
-                      child: const Text("Square"),
+                      child: const Text("layout3"),
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          size = NativeAdSize.layout4;
+                        });
+                      },
+                      child: const Text("layout4"),
                     ),
                     const SizedBox(
                       width: 8,

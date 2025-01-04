@@ -32,20 +32,26 @@ class MexaAdsPlugin : FlutterPlugin, MethodCallHandler {
         flutterPluginBinding.flutterEngine.plugins.add(GoogleMobileAdsPlugin())
         GoogleMobileAdsPlugin.registerNativeAdFactory(
             flutterPluginBinding.flutterEngine,
-            "nativeAdSmallFactory",
-            NativeAdSmallFactory(LayoutInflater.from(flutterPluginBinding.applicationContext))
+            "nativeLayout1Factory",
+            NativeLayout1Factory(LayoutInflater.from(flutterPluginBinding.applicationContext))
         )
 
         GoogleMobileAdsPlugin.registerNativeAdFactory(
             flutterPluginBinding.flutterEngine,
-            "nativeAdMediumFactory",
-            NativeAdMediumFactory(LayoutInflater.from(flutterPluginBinding.applicationContext))
+            "nativeLayout2Factory",
+            NativeLayout2Factory(LayoutInflater.from(flutterPluginBinding.applicationContext))
         )
 
         GoogleMobileAdsPlugin.registerNativeAdFactory(
             flutterPluginBinding.flutterEngine,
-            "nativeAdSquareFactory",
-            NativeAdSquareFactory(LayoutInflater.from(flutterPluginBinding.applicationContext))
+            "nativeLayout3Factory",
+            NativeLayout3Factory(LayoutInflater.from(flutterPluginBinding.applicationContext))
+        )
+
+        GoogleMobileAdsPlugin.registerNativeAdFactory(
+            flutterPluginBinding.flutterEngine,
+            "nativeLayout4Factory",
+            NativeLayout4Factory(LayoutInflater.from(flutterPluginBinding.applicationContext))
         )
 
         GoogleMobileAdsPlugin.registerNativeAdFactory(
