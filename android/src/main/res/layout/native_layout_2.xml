@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="160dp"
         android:layout_centerInParent="true"
+        android:paddingBottom="12dp"
         android:background="@color/gnt_white">
 
         <TextView
@@ -120,7 +121,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:layout_marginTop="8dp"
-            android:background="@drawable/bg_border_radius_8"
+            android:background="@drawable/bg_border_radius_12"
             android:gravity="center"
             android:lines="1"
             android:paddingVertical="14dp"

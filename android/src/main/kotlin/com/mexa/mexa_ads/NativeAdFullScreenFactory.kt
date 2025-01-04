@@ -8,13 +8,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.RatingBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.drawable.DrawableCompat
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
-import com.mexa.mexa_ads.R
 import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
 
 class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
@@ -115,7 +113,7 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
             if (customOptions["bg_color"] != null) {
                 val wrappedDrawable = DrawableCompat.wrap(
                     MexaAdsPlugin.resources
-                        .getDrawable(R.drawable.bg_border_radius_8, null)
+                        .getDrawable(R.drawable.bg_border_radius_12, null)
                 )
                 DrawableCompat.setTint(wrappedDrawable, Color.parseColor(customOptions["bg_color"] as String))
 
@@ -150,7 +148,7 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
                 } else if (colors.size == 1) {
                     // Nếu chỉ có 1 màu, sử dụng mã của bạn
                     val wrappedDrawable = DrawableCompat.wrap(
-                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_8, null)
+                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_12, null)
                     )
                     DrawableCompat.setTint(wrappedDrawable, Color.parseColor(colors[0])) // Áp dụng màu HEX vào drawable
 
@@ -160,7 +158,7 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
                     // Nếu không có màu nào, set màu mặc định
                     val defaultColor = Color.parseColor("#FF6200EE") // Màu mặc định (ví dụ: màu tím)
                     val wrappedDrawable = DrawableCompat.wrap(
-                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_8, null)
+                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_12, null)
                     )
                     DrawableCompat.setTint(wrappedDrawable, defaultColor) // Áp dụng màu mặc định vào drawable
 

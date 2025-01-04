@@ -35,7 +35,7 @@ class NativeAdNoMediaFactory : GoogleMobileAdsPlugin.NativeAdFactory {
         adView.headlineView = adView.findViewById(R.id.ad_headline)
         adView.bodyView = adView.findViewById(R.id.ad_body)
         adView.callToActionView = adView.findViewById(R.id.ad_call_to_action)
-
+        adView.iconView = adView.findViewById(R.id.ad_icon)
         // The headline and mediaContent are guaranteed to be in every NativeAd.
         (adView.headlineView as TextView).text = nativeAd?.headline
 
@@ -46,6 +46,13 @@ class NativeAdNoMediaFactory : GoogleMobileAdsPlugin.NativeAdFactory {
         } else {
             adView.bodyView?.visibility = View.VISIBLE
             (adView.bodyView as TextView).text = nativeAd.body
+        }
+
+        if (nativeAd?.icon == null) {
+            adView.iconView?.visibility = View.GONE
+        } else {
+            (adView.iconView as ImageView).setImageDrawable(nativeAd.icon!!.drawable)
+            adView.iconView?.visibility = View.VISIBLE
         }
 
         if (nativeAd?.callToAction == null) {
@@ -63,7 +70,7 @@ class NativeAdNoMediaFactory : GoogleMobileAdsPlugin.NativeAdFactory {
             if (customOptions["bg_color"] != null) {
                 val wrappedDrawable = DrawableCompat.wrap(
                     MexaAdsPlugin.resources
-                        .getDrawable(R.drawable.bg_border_radius_8, null)
+                        .getDrawable(R.drawable.bg_border_radius_12, null)
                 )
                 DrawableCompat.setTint(wrappedDrawable, Color.parseColor(customOptions["bg_color"] as String))
 
@@ -91,14 +98,14 @@ class NativeAdNoMediaFactory : GoogleMobileAdsPlugin.NativeAdFactory {
 
                     // Tạo GradientDrawable
                     val gradientDrawable = GradientDrawable(gradientOrientation, intColors)
-                    gradientDrawable.cornerRadius = 8 * Resources.getSystem().displayMetrics.density // Bo góc
+                    gradientDrawable.cornerRadius = 30 * Resources.getSystem().displayMetrics.density // Bo góc
 
                     // Gán gradient drawable cho background của nút
                     (adView.callToActionView as Button).background = gradientDrawable
                 } else if (colors.size == 1) {
                     // Nếu chỉ có 1 màu, sử dụng mã của bạn
                     val wrappedDrawable = DrawableCompat.wrap(
-                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_8, null)
+                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_30, null)
                     )
                     DrawableCompat.setTint(wrappedDrawable, Color.parseColor(colors[0])) // Áp dụng màu HEX vào drawable
 
@@ -108,7 +115,7 @@ class NativeAdNoMediaFactory : GoogleMobileAdsPlugin.NativeAdFactory {
                     // Nếu không có màu nào, set màu mặc định
                     val defaultColor = Color.parseColor("#FF6200EE") // Màu mặc định (ví dụ: màu tím)
                     val wrappedDrawable = DrawableCompat.wrap(
-                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_8, null)
+                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_12, null)
                     )
                     DrawableCompat.setTint(wrappedDrawable, defaultColor) // Áp dụng màu mặc định vào drawable
 
