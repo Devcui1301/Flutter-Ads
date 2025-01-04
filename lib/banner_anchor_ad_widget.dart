@@ -146,18 +146,17 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
           widget.onAdClosed?.call();
         },
         onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-          MexaAds.instance.adRevenuePaidListener?.call(
-            AdRevenuePaidParams(
-              networkName:
-                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
-                      '',
-              revenue: valueMicros / 1000000.0,
-              adUnitId: ad.adUnitId,
-              adType: AdType.banner.value,
-              placement: widget.placement,
-              country: currencyCode,
-            ),
+          final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
+            networkName:
+                ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
+            revenue: valueMicros / 1000000.0,
+            adUnitId: ad.adUnitId,
+            adType: AdType.banner.value,
+            placement: widget.placement,
+            country: currencyCode,
           );
+          MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+          MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
         },
       ),
     );

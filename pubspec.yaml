@@ -15,7 +15,7 @@ dependencies:
   shimmer: "3.0.0"
   lottie: "3.0.0"
   visibility_detector: "0.4.0+2"
-  
+  adjust_sdk: "5.0.3"
 
 dev_dependencies:
   flutter_test:

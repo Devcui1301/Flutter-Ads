@@ -143,17 +143,17 @@ class InterstitialAdController implements AdController {
 
   void _setAdListener(FullScreenContentCallback<InterstitialAd> callback) {
     _interstitialAd?.onPaidEvent = (ad, valueMicros, precision, currencyCode) {
-      MexaAds.instance.adRevenuePaidListener?.call(
-        AdRevenuePaidParams(
-          networkName:
-              ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-          revenue: valueMicros / 1000000.0,
-          adUnitId: ad.adUnitId,
-          adType: AdType.interstitial.value,
-          placement: _adPlacement,
-          country: currencyCode,
-        ),
+      final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
+        networkName:
+            ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
+        revenue: valueMicros / 1000000.0,
+        adUnitId: ad.adUnitId,
+        adType: AdType.interstitial.value,
+        placement: _adPlacement,
+        country: currencyCode,
       );
+      MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+      MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
     };
     _interstitialAd!.fullScreenContentCallback = callback;
   }

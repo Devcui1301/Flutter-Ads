@@ -12,7 +12,8 @@ import 'package:flutter/material.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MexaAds.instance.initialize(
-    AdConstant(
+    adjustkey: "l7niimcenmyo",
+    value: AdConstant(
         interstitialId: {
           'inter_1': 'ca-app-pub-3940256099942544/1033173712',
           'inter_2': 'ca-app-pub-3940256099942544/1033173712',

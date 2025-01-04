@@ -108,17 +108,17 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
         ));
       },
       onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-        MexaAds.instance.adRevenuePaidListener?.call(
-          AdRevenuePaidParams(
-            networkName: 'google_admob',
-            revenue: valueMicros / 1000000.0,
-            adUnitId: ad.adUnitId,
-            adType: AdType.bannerCollapsible.value,
-            placement: widget.placement,
-            country: currencyCode,
-          ),
+        final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
+          networkName:
+              ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
+          revenue: valueMicros / 1000000.0,
+          adUnitId: ad.adUnitId,
+          adType: AdType.bannerCollapsible.value,
+          placement: widget.placement,
+          country: currencyCode,
         );
-        logger("onPaidEvent: ${valueMicros / 1000000.0}");
+        MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+        MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
       },
     );
   }

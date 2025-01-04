@@ -1,5 +1,8 @@
 import 'dart:collection';
 
+import 'package:adjust_sdk/adjust.dart';
+import 'package:adjust_sdk/adjust_ad_revenue.dart';
+import 'package:adjust_sdk/adjust_config.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
@@ -61,12 +64,34 @@ class MexaAds {
     adRevenuePaidListener = onAdRevenuePaided;
   }
 
+  void logAdjustRevenueEvent(AdRevenuePaidParams adRevenuePaidParams) {
+    try {
+      final AdjustAdRevenue adRevenue = AdjustAdRevenue("admob_sdk");
+      // Thiết lập doanh thu và loại tiền
+      adRevenue.setRevenue(
+          adRevenuePaidParams.revenue, adRevenuePaidParams.country);
+      adRevenue.adRevenueNetwork = adRevenuePaidParams.networkName;
+      adRevenue.adRevenuePlacement = adRevenuePaidParams.placement;
+
+      // Gửi thông tin đến Adjust
+      Adjust.trackAdRevenue(adRevenue);
+    } catch (e) {
+      print(e.toString);
+    }
+  }
+
   AdClickedListener? adClickedListener;
   void setAdClickedListener(AdClickedListener adClickedListener) {
     this.adClickedListener = adClickedListener;
   }
 
-  void initialize(AdConstant value, {List<String>? preloadPlacements}) {
+  void initialize(
+      {required String adjustkey,
+      required AdConstant value,
+      List<String>? preloadPlacements}) {
+    if (adjustkey != "") {
+      _initAdjust(adjustkey);
+    }
     MobileAds.instance.initialize();
     _adConstant = value;
 
@@ -116,6 +141,11 @@ class MexaAds {
         }
       });
     }
+  }
+
+  void _initAdjust(String adjustkey) {
+    AdjustConfig config = AdjustConfig(adjustkey, AdjustEnvironment.sandbox);
+    Adjust.initSdk(config);
   }
 
   void showInterstitialAd(
