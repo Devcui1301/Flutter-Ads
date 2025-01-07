@@ -72,11 +72,11 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
 
   Widget _buildPage(BuildContext context) {
     if (error != null || MexaAds.instance.isAdDisable) {
-      if (widget.size == NativeAdSize.fullScreen) {
-        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          Navigator.pop(context);
-        });
-      }
+      // if (widget.size == NativeAdSize.fullScreen) {
+      //   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      //     Navigator.pop(context);
+      //   });
+      // }
       return kDebugMode
           ? Container(
               padding: const EdgeInsets.all(10.0),
@@ -104,7 +104,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                             ? widget.adHeight ??
                                 MexaAds.instance.adConstant
                                     .nativeAdHeightLayoutNoMedia
-                            : 100,
+                            : 90,
         child: widget.size == NativeAdSize.fullScreen
             ? Scaffold(
                 body: Stack(

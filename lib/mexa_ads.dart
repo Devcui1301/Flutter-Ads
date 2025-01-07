@@ -402,7 +402,7 @@ class AdConstant {
     this.nativeAdHeightLayout2 = 200,
     this.nativeAdHeightLayout3 = 240,
     this.nativeAdHeightLayout4 = 160,
-    this.nativeAdHeightLayoutNoMedia = 80,
+    this.nativeAdHeightLayoutNoMedia = 90,
   });
 }
 
