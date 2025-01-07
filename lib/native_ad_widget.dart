@@ -104,7 +104,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                             ? widget.adHeight ??
                                 MexaAds.instance.adConstant
                                     .nativeAdHeightLayoutNoMedia
-                            : 90,
+                            : 80,
         child: widget.size == NativeAdSize.fullScreen
             ? Scaffold(
                 body: Stack(
