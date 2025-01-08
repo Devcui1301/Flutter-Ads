@@ -209,8 +209,12 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
           logger('.............$NativeAd loaded.');
           error = null;
           if (mounted) {
-            setState(() {
-              _nativeAdIsLoaded = true;
+            Future.delayed(const Duration(milliseconds: 100)).then((value) {
+              if (mounted) {
+                setState(() {
+                  _nativeAdIsLoaded = true;
+                });
+              }
             });
           }
           // Future.delayed(const Duration(milliseconds: 700)).then((value) {
@@ -282,11 +286,13 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
       NativeAdManager manager = MexaAds.instance.nativeAdManager;
       if (manager.isAdLoaded(widget.placement)) {
         _nativeAd = manager.nativeAds[widget.placement];
-        if (mounted) {
-          setState(() {
-            _nativeAdIsLoaded = true;
-          });
-        }
+        Future.delayed(const Duration(milliseconds: 100)).then((value) {
+          if (mounted) {
+            setState(() {
+              _nativeAdIsLoaded = true;
+            });
+          }
+        });
         // Future.delayed(const Duration(milliseconds: 700)).then((value) {
         //   if (mounted) {
         //     setState(() {});
