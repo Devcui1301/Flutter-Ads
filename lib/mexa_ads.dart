@@ -34,9 +34,9 @@ class MexaAds {
 
   bool isAdDisable = false;
   bool loadAdAfterInitializing = true;
-  bool isShownAOAPending = false;
-  bool isShownIntersPending = false;
-  bool isShownRewardedPending = false;
+  // bool isShownAOAPending = false;
+  // bool isShownIntersPending = false;
+  // bool isShownRewardedPending = false;
   Widget? loadingAdWidget;
 
   // native ad decoration
@@ -103,22 +103,22 @@ class MexaAds {
           ..setAdPlacement(key),
       );
     });
-    adConstant.appOpenId.forEach((key, value) {
-      _appOpenAdController.putIfAbsent(
-        key,
-        () => AppOpenAdController()
-          ..setAdId(value)
-          ..setAdPlacement(key),
-      );
-    });
-    adConstant.rewardedAdId.forEach((key, value) {
-      _rewardedAdController.putIfAbsent(
-        key,
-        () => RewardedAdController()
-          ..setAdId(value)
-          ..setAdPlacement(key),
-      );
-    });
+    // adConstant.appOpenId.forEach((key, value) {
+    //   _appOpenAdController.putIfAbsent(
+    //     key,
+    //     () => AppOpenAdController()
+    //       ..setAdId(value)
+    //       ..setAdPlacement(key),
+    //   );
+    // });
+    // adConstant.rewardedAdId.forEach((key, value) {
+    //   _rewardedAdController.putIfAbsent(
+    //     key,
+    //     () => RewardedAdController()
+    //       ..setAdId(value)
+    //       ..setAdPlacement(key),
+    //   );
+    // });
 
     if (_adConstant.interstitialId.isNotEmpty) {
       adConstant.interstitialId.forEach((key, value) {
@@ -148,57 +148,81 @@ class MexaAds {
     Adjust.initSdk(config);
   }
 
-  void showInterstitialAd(
-      {required BuildContext context,
-      required String? placement,
-      Function(bool canShowAd)? onStartLoading,
-      Function()? onAdDismissedFullScreenContent,
-      VoidCallback? onAdClicked,
-      VoidCallback? onAdLoaded,
-      VoidCallback? onAdDisplayed,
-      VoidCallback? onAdFailToLoad,
-      bool forceShow = false,
-      bool showLoading = true,
-      bool autoReloadAdAfterShow = true}) {
-    placement ??= adConstant.interstitialId.keys.first;
-    logger('show with placement: $placement ${_intersAdController[placement]}');
-    if (_isFirstShowAOA == false ||
-        _isFirstShowInters == false ||
-        _isFirstShowRewared == false) {
-      logger(
-          'inters time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowInterstitialAd.millisecondsSinceEpoch}');
-      logger(
-          'RV time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowRewardAd.millisecondsSinceEpoch}');
-      logger(
-          'AOA time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowAOAAd.millisecondsSinceEpoch}');
-      if (DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowInterstitialAd.millisecondsSinceEpoch <
-              2000 ||
-          DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowRewardAd.millisecondsSinceEpoch <
-              2000 ||
-          DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowAOAAd.millisecondsSinceEpoch <
-              2000) {
-        onStartLoading?.call(false);
-        return;
-      }
-    }
+  // void showInterstitialAd(
+  //     {required BuildContext context,
+  //     required String? placement,
+  //     Function(bool canShowAd)? onStartLoading,
+  //     Function()? onAdDismissedFullScreenContent,
+  //     VoidCallback? onAdClicked,
+  //     VoidCallback? onAdLoaded,
+  //     VoidCallback? onAdDisplayed,
+  //     VoidCallback? onAdFailToLoad,
+  //     bool forceShow = false,
+  //     bool showLoading = true,
+  //     bool autoReloadAdAfterShow = true}) {
+  //   placement ??= adConstant.interstitialId.keys.first;
+  //   logger('show with placement: $placement ${_intersAdController[placement]}');
+  //   if (_isFirstShowAOA == false ||
+  //       _isFirstShowInters == false ||
+  //       _isFirstShowRewared == false) {
+  //     logger(
+  //         'inters time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowInterstitialAd.millisecondsSinceEpoch}');
+  //     logger(
+  //         'RV time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowRewardAd.millisecondsSinceEpoch}');
+  //     logger(
+  //         'AOA time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowAOAAd.millisecondsSinceEpoch}');
+  //     if (DateTime.now().millisecondsSinceEpoch -
+  //                 _lastestTimeShowInterstitialAd.millisecondsSinceEpoch <
+  //             2000 ||
+  //         DateTime.now().millisecondsSinceEpoch -
+  //                 _lastestTimeShowRewardAd.millisecondsSinceEpoch <
+  //             2000 ||
+  //         DateTime.now().millisecondsSinceEpoch -
+  //                 _lastestTimeShowAOAAd.millisecondsSinceEpoch <
+  //             2000) {
+  //       onStartLoading?.call(false);
+  //       return;
+  //     }
+  //   }
+  //   _intersAdController[placement]?.showAd(
+  //       context: context,
+  //       forceShow: forceShow,
+  //       showLoading: showLoading,
+  //       onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
+  //       onAdClicked: () => onAdClicked?.call(),
+  //       onAdDismissedFullScreenContent: () {
+  //         _lastestTimeShowInterstitialAd = DateTime.now();
+  //         onAdDismissedFullScreenContent?.call();
+  //         _isFirstShowInters = false;
+  //       },
+  //       onAdLoaded: () => onAdLoaded?.call(),
+  //       onAdFailedToLoad: () => onAdFailToLoad?.call(),
+  //       onAdDisplay: () => onAdDisplayed?.call(),
+  //       autoReloadAdAfterShow: autoReloadAdAfterShow);
+  // }
+  void loadInterAd({
+    required String placement,
+    VoidCallback? onAdLoaded,
+    VoidCallback? onAdFailToLoad,
+  }) {
+    _intersAdController[placement]
+        ?.loadAd(onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailToLoad);
+  }
+
+  void showInterAd({
+    required String placement,
+    required BuildContext context,
+    Function()? onAdDismissedFullScreenContent,
+    Function()? onAdClicked,
+    Function()? onAdDisplay,
+    Function()? onAdFailedToShow,
+  }) {
     _intersAdController[placement]?.showAd(
         context: context,
-        forceShow: forceShow,
-        showLoading: showLoading,
-        onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
-        onAdClicked: () => onAdClicked?.call(),
-        onAdDismissedFullScreenContent: () {
-          _lastestTimeShowInterstitialAd = DateTime.now();
-          onAdDismissedFullScreenContent?.call();
-          _isFirstShowInters = false;
-        },
-        onAdLoaded: () => onAdLoaded?.call(),
-        onAdFailedToLoad: () => onAdFailToLoad?.call(),
-        onAdDisplay: () => onAdDisplayed?.call(),
-        autoReloadAdAfterShow: autoReloadAdAfterShow);
+        onAdClicked: onAdClicked,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdDisplay: onAdDisplay,
+        onAdFailedToShow: onAdFailedToShow);
   }
 
   void showAppOpenAd(
@@ -240,22 +264,22 @@ class MexaAds {
       }
     }
 
-    _appOpenAdController[placement]?.showAd(
-        context: context,
-        forceShow: forceShow,
-        onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
-        onAdClicked: () => onAdClicked?.call(),
-        onAdLoaded: () => onAdLoaded?.call(),
-        onAdDismissedFullScreenContent: () {
-          _lastestTimeShowAOAAd = DateTime.now();
-          onAdDismissedFullScreenContent?.call();
-          _isFirstShowAOA = false;
-        },
-        onAdFailedToLoad: () => onAdFailToLoad?.call(),
-        onAdDisplay: () => onAdDisplayed?.call(),
-        showLoading: showLoading,
-        placement: placement,
-        autoReloadAdAfterShow: autoReloadAdAfterShow);
+    // _appOpenAdController[placement]?.showAd(
+    //     context: context,
+    //     forceShow: forceShow,
+    //     onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
+    //     onAdClicked: () => onAdClicked?.call(),
+    //     onAdLoaded: () => onAdLoaded?.call(),
+    //     onAdDismissedFullScreenContent: () {
+    //       _lastestTimeShowAOAAd = DateTime.now();
+    //       onAdDismissedFullScreenContent?.call();
+    //       _isFirstShowAOA = false;
+    //     },
+    //     onAdFailedToLoad: () => onAdFailToLoad?.call(),
+    //     onAdDisplay: () => onAdDisplayed?.call(),
+    //     showLoading: showLoading,
+    //     placement: placement,
+    //     autoReloadAdAfterShow: autoReloadAdAfterShow);
   }
 
   void showRewardedAd(
@@ -295,22 +319,22 @@ class MexaAds {
         return;
       }
     }
-    _rewardedAdController[placement]?.showAd(
-        context: context,
-        forceShow: forceShow,
-        onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
-        onAdClicked: () => onAdClicked?.call(),
-        onAdLoaded: () => onAdLoaded?.call(),
-        onAdDismissedFullScreenContent: () {
-          _lastestTimeShowRewardAd = DateTime.now();
-          onAdDismissedFullScreenContent?.call();
-          _isFirstShowRewared = false;
-        },
-        onAdFailedToLoad: () => onAdFailToLoad?.call(),
-        onAdDisplay: () => onAdDisplayed?.call(),
-        placement: placement,
-        showLoading: showLoading,
-        autoReloadAdAfterShow: autoReloadAdAfterShow);
+    // _rewardedAdController[placement]?.showAd(
+    //     context: context,
+    //     forceShow: forceShow,
+    //     onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
+    //     onAdClicked: () => onAdClicked?.call(),
+    //     onAdLoaded: () => onAdLoaded?.call(),
+    //     onAdDismissedFullScreenContent: () {
+    //       _lastestTimeShowRewardAd = DateTime.now();
+    //       onAdDismissedFullScreenContent?.call();
+    //       _isFirstShowRewared = false;
+    //     },
+    //     onAdFailedToLoad: () => onAdFailToLoad?.call(),
+    //     onAdDisplay: () => onAdDisplayed?.call(),
+    //     placement: placement,
+    //     showLoading: showLoading,
+    //     autoReloadAdAfterShow: autoReloadAdAfterShow);
   }
 
   void dispose() {

@@ -15,39 +15,41 @@ class IntersAdScreen extends StatelessWidget {
         children: [
           PrimaryButton(
             onPressed: () {
-              MexaAds.instance.showInterstitialAd(
-                showLoading: true,
-                // forceShow: true,
-                onAdDismissedFullScreenContent: () {
-                  log('On inters ad dismissed callback');
-                },
-                onAdClicked: () {
-                  log('On inters ad clicked callback');
-                },
+              MexaAds.instance.loadInterAd(
                 placement: 'inter_1',
-                forceShow: true, context: context,
+                onAdLoaded: () {
+                  log("Test Inter Ad: loaded");
+                },
+                onAdFailToLoad: () {
+                  log("Test Inter Ad: load fail");
+                },
               );
             },
-            label: 'Show Interstitial Ad 1',
+            label: 'Load Interstitial Ad',
           ),
           const SizedBox(
             height: 16,
           ),
           PrimaryButton(
             onPressed: () {
-              MexaAds.instance.showInterstitialAd(
-                // forceShow: true,
+              MexaAds.instance.showInterAd(
+                onAdDisplay: () {
+                  log('Test Inter Ad: On inters ad display callback');
+                },
+                onAdFailedToShow: () {
+                  log('Test Inter Ad: On inters ad failed to show callback');
+                },
                 onAdDismissedFullScreenContent: () {
-                  log('On inters ad dismissed callback');
+                  log('Test Inter Ad: On inters ad dismissed callback');
                 },
                 onAdClicked: () {
-                  log('On inters ad clicked callback');
+                  log('Test Inter Ad: On inters ad clicked callback');
                 },
-                placement: 'inter_2',
-                forceShow: true, context: context,
+                placement: 'inter_1',
+                context: context,
               );
             },
-            label: 'Show Interstitial Ad 2',
+            label: 'Show Interstitial Ad',
           ),
         ],
       ),

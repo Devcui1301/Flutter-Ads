@@ -6,18 +6,13 @@ abstract class AdController {
     VoidCallback? onAdFailedToLoad,
   });
 
-  Future<void> showAd(
-      {BuildContext? context,
-      Function(bool canShowAd)? onStartLoading,
-      VoidCallback? onAdDismissedFullScreenContent,
-      VoidCallback? onAdDisplay,
-      VoidCallback? onAdClicked,
-      VoidCallback? onAdLoaded,
-      VoidCallback? onAdFailedToLoad,
-      String? placement,
-      bool forceShow = false,
-      bool showLoading = true,
-      bool autoReloadAdAfterShow = true});
+  Future<void> showAd({
+    required BuildContext context,
+    VoidCallback? onAdDismissedFullScreenContent,
+    VoidCallback? onAdClicked,
+    VoidCallback? onAdDisplay,
+    VoidCallback? onAdFailedToShow,
+  });
 
   void dispose();
 }
