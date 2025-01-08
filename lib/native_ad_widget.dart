@@ -104,7 +104,11 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                             ? widget.adHeight ??
                                 MexaAds.instance.adConstant
                                     .nativeAdHeightLayoutNoMedia
-                            : 80,
+                            : widget.size == NativeAdSize.noMedia2
+                                ? widget.adHeight ??
+                                    MexaAds.instance.adConstant
+                                        .nativeAdHeightLayoutNoMedia2
+                                : 80,
         child: widget.size == NativeAdSize.fullScreen
             ? Scaffold(
                 body: Stack(
@@ -148,7 +152,9 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                     ? const NativeLayout3Shimmer()
                     : widget.size == NativeAdSize.layout4
                         ? const NativeLayout4Shimmer()
-                        : const NoMediaNativeAdShimmer();
+                        : widget.size == NativeAdSize.noMedia
+                            ? const NoMediaNativeAdShimmer()
+                            : const NoMedia2NativeAdShimmer();
   }
 
   void _loadAd() {
@@ -203,7 +209,9 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                       ? 'nativeLayout4Factory'
                       : widget.size == NativeAdSize.noMedia
                           ? 'nativeAdNoMediaFactory'
-                          : 'nativeAdFullScreenFactory',
+                          : widget.size == NativeAdSize.noMedia2
+                              ? 'nativeAdNoMedia2Factory'
+                              : 'nativeAdFullScreenFactory',
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) {
           logger('.............$NativeAd loaded.');
@@ -731,6 +739,66 @@ class NoMediaNativeAdShimmer extends StatelessWidget {
                 height: double.infinity,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NoMedia2NativeAdShimmer extends StatelessWidget {
+  final double? adHeight;
+  const NoMedia2NativeAdShimmer({
+    super.key,
+    this.adHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      width: double.infinity,
+      height:
+          adHeight ?? MexaAds.instance.adConstant.nativeAdHeightLayoutNoMedia2,
+      color: Colors.white,
+      child: const PrimaryShimmer(
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ContainerShimmer(
+                  width: 50,
+                  height: 50,
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ContainerShimmer(
+                        width: 160,
+                        height: 20,
+                      ),
+                      SizedBox(height: 10),
+                      ContainerShimmer(
+                        width: double.infinity,
+                        height: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            ContainerShimmer(
+              width: double.infinity,
+              height: 50,
+            )
           ],
         ),
       ),
