@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
 import 'package:mexa_ads/mexa_ads.dart';
-import 'package:mexa_ads/widget/loading_dialog.dart';
 
 class InterstitialAdController implements AdController {
   final AdRequest _request = const AdRequest();
@@ -12,7 +11,6 @@ class InterstitialAdController implements AdController {
   Completer<void>? _loadingCompleter;
   int _numLoadAttempts = 0;
   static const int maxLoadAttempts = 5;
-  bool loadingShowing = false;
 
   late String _adId;
   void setAdId(String id) {
@@ -24,26 +22,47 @@ class InterstitialAdController implements AdController {
     _adPlacement = placement;
   }
 
-  Timer? _loadingTimer;
   @override
-  Future<void> loadAd(
+  Future<bool> loadAd(
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
+    // Nếu đang load, đợi quá trình load hoàn tất
+    if (_loadingCompleter != null && !_loadingCompleter!.isCompleted) {
+      log("Đang load quảng cáo, chờ hoàn tất");
+      try {
+        await _loadingCompleter!.future;
+        return true; // Load thành công
+      } catch (e) {
+        onAdFailedToLoad?.call(); // Gọi callback khi thất bại
+        return false; // Load thất bại
+      }
+    }
     // Nếu đã có quảng cáo hoặc đang load, không load lại
     if (_loadingCompleter != null && !_loadingCompleter!.isCompleted) {
       log("Nếu đã có quảng cáo hoặc đang load, không load lại");
-      return _loadingCompleter!.future;
+      await _loadingCompleter!.future;
+      return true;
     }
 
+    // Nếu đã có quảng cáo sẵn sàng, không cần load lại
     if (_interstitialAd != null) {
-      return Future.value(); // Quảng cáo đã sẵn sàng
+      log("Quảng cáo đã sẵn sàng, không cần load lại");
+      return true;
     }
 
+    // Khởi tạo quá trình load quảng cáo
     _loadingCompleter = Completer<void>();
     _numLoadAttempts = 0;
 
     // Bắt đầu load quảng cáo
     _loadAdInternal(onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailedToLoad);
-    return _loadingCompleter!.future;
+    // Chờ quá trình load hoàn tất
+    try {
+      await _loadingCompleter!.future;
+      return true; // Load thành công
+    } catch (e) {
+      onAdFailedToLoad?.call(); // Gọi callback khi thất bại
+      return false; // Load thất bại
+    }
   }
 
   void _loadAdInternal(
@@ -95,118 +114,61 @@ class InterstitialAdController implements AdController {
       VoidCallback? onAdClicked,
       VoidCallback? onAdDisplay,
       VoidCallback? onAdFailedToShow,
-      bool showLoading = true}) async {
-    // Nếu quảng cáo đang được load, chờ hoàn tất
-    if (_loadingCompleter != null && !_loadingCompleter!.isCompleted) {
-      try {
-        log("Nếu quảng cáo đang được load, chờ hoàn tất");
-        _showLoadingOverlay(context, showLoading, onAdFailedToShow);
-        await _loadingCompleter!.future; // Chờ quá trình load hoàn thành
-        log("Chờ quá trình load hoàn thành");
-      } catch (e) {
-        onAdFailedToShow?.call();
-        return;
-      }
+      bool reloadAfterShow = false}) async {
+    // Nếu quảng cáo chưa được load, return luôn
+    if (_interstitialAd == null) {
+      onAdFailedToShow?.call();
+      return;
     }
 
-    // Nếu quảng cáo chưa được load, bắt đầu load trước
-    if (_interstitialAd == null) {
-      try {
-        log("Nếu quảng cáo chưa được load, bắt đầu load trước");
-        if (context.mounted) {
-          _showLoadingOverlay(context, showLoading, onAdFailedToShow);
-        }
-        await loadAd(
-          onAdFailedToLoad: () {
-            _hideLoadingOverlay(context, showLoading);
-            onAdFailedToShow?.call();
-          },
-        ); // Load quảng cáo
-      } catch (e) {
+    // Hiển thị quảng cáo
+    _interstitialAd?.onPaidEvent = (ad, valueMicros, precision, currencyCode) {
+      final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
+        networkName:
+            ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
+        revenue: valueMicros / 1000000.0,
+        adUnitId: ad.adUnitId,
+        adType: AdType.interstitial.value,
+        placement: _adPlacement,
+        country: currencyCode,
+      );
+      MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+      MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
+    };
+    _interstitialAd!.fullScreenContentCallback =
+        FullScreenContentCallback<InterstitialAd>(
+      onAdDismissedFullScreenContent: (ad) {
+        onAdDismissedFullScreenContent?.call();
+        ad.dispose();
+        _interstitialAd = null; // Reset sau khi hiển thị
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
         onAdFailedToShow?.call();
-        return;
-      }
-    }
-    if (context.mounted) {
-      _showLoadingOverlay(context, showLoading, onAdFailedToShow);
-    }
-    // Hiển thị quảng cáo nếu đã load xong
-    if (_interstitialAd != null) {
-      _interstitialAd?.onPaidEvent =
-          (ad, valueMicros, precision, currencyCode) {
-        final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
+        ad.dispose();
+        _interstitialAd = null;
+      },
+      onAdClicked: (ad) {
+        onAdClicked?.call();
+        MexaAds.instance.adClickedListener?.call(AdClickedParams(
           networkName:
               ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-          revenue: valueMicros / 1000000.0,
-          adUnitId: ad.adUnitId,
+          adUnitId: _adId,
           adType: AdType.interstitial.value,
           placement: _adPlacement,
-          country: currencyCode,
-        );
-        MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
-        MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
-      };
-      _interstitialAd!.fullScreenContentCallback =
-          FullScreenContentCallback<InterstitialAd>(
-        onAdDismissedFullScreenContent: (ad) {
-          onAdDismissedFullScreenContent?.call();
-          ad.dispose();
-          _interstitialAd = null; // Reset sau khi hiển thị
-        },
-        onAdFailedToShowFullScreenContent: (ad, error) {
-          _hideLoadingOverlay(context, showLoading);
-          onAdFailedToShow?.call();
-          ad.dispose();
-          _interstitialAd = null;
-        },
-        onAdClicked: (ad) {
-          onAdClicked?.call();
-          MexaAds.instance.adClickedListener?.call(AdClickedParams(
-            networkName:
-                ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-            adUnitId: _adId,
-            adType: AdType.interstitial.value,
-            placement: _adPlacement,
-          ));
-        },
-        onAdImpression: (ad) {
-          _hideLoadingOverlay(context, showLoading);
-          onAdDisplay?.call();
-        },
-      );
+        ));
+      },
+      onAdImpression: (ad) {
+        if (reloadAfterShow) {
+          _loadAdInternal();
+        }
+        onAdDisplay?.call();
+      },
+    );
 
-      _interstitialAd!.show();
-    } else {
-      onAdFailedToShow?.call();
-    }
+    _interstitialAd!.show();
   }
 
-  void _showLoadingOverlay(
-      BuildContext? context, bool showLoading, VoidCallback? onAdFailedToLoad) {
-    if (loadingShowing) return;
-    loadingShowing = true;
-    _loadingTimer ??= Timer(MexaAds.instance.adConstant.timeoutLoadAd, () {
-      _hideLoadingOverlay(context, showLoading);
-      onAdFailedToLoad?.call();
-    });
-
-    if (!showLoading) return;
-    if (context != null && context.mounted) {
-      Navigator.of(context).push(LoadingOverlay());
-    }
-  }
-
-  void _hideLoadingOverlay(BuildContext? context, bool showLoading) {
-    if (!loadingShowing) return;
-    loadingShowing = false;
-    _loadingTimer?.cancel(); // Cancel the Timer
-    _loadingTimer = null; // Reset Timer
-    if (!showLoading) return;
-    if (context != null && context.mounted) {
-      Navigator.of(context).pop();
-    }
-  }
-
+  @override
   void dispose() {
     _interstitialAd?.dispose();
     _interstitialAd = null;

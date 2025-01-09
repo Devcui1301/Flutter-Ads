@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 abstract class AdController {
-  Future<void> loadAd({
+  Future<bool> loadAd({
     VoidCallback? onAdLoaded,
     VoidCallback? onAdFailedToLoad,
   });
