@@ -24,6 +24,8 @@ class NativeAdWidget extends StatefulWidget {
   final Color? adTitleTextColor;
   final Color? adBodyTextColor;
   final GradientOrientation? gradientOrientation;
+  //chỉ nhận các giá trị 12, 16, 20, 24, 248, 30
+  final int? borderRadius;
 
   final Function(
     Ad ad,
@@ -51,6 +53,7 @@ class NativeAdWidget extends StatefulWidget {
     this.adTitleTextColor,
     this.adBodyTextColor,
     this.gradientOrientation,
+    this.borderRadius,
   });
 
   @override
@@ -191,7 +194,8 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         'ad_banner_color': colorToHexString(
             widget.adBannerColor ?? MexaAds.instance.primaryColor),
         'gradient_orientation': gradientOrientationToString(
-            widget.gradientOrientation ?? GradientOrientation.leftToRight)
+            widget.gradientOrientation ?? GradientOrientation.leftToRight),
+        'cta_border_radius': widget.borderRadius ?? 12
       }..removeWhere((key, value) => value is String && value.isEmpty),
       factoryId: widget.size == NativeAdSize.layout1
           ? 'nativeLayout1Factory'
