@@ -344,6 +344,7 @@ class MexaAds {
       VoidCallback? onAdFailedToLoad,
       VoidCallback? onAdClicked,
       VoidCallback? onAdClosed,
+      int borderRadius = 12,
       Function(
         Ad ad,
         double valueMicros,
@@ -367,6 +368,7 @@ class MexaAds {
       adTitleTextColor: adTitleTextColor,
       adBodyTextColor: adBodyTextColor,
       gradientOrientation: gradientOrientation,
+      borderRadius: borderRadius,
     );
   }
 }
@@ -526,6 +528,7 @@ class NativeAdManager {
       VoidCallback? onAdLoaded,
       VoidCallback? onAdFailedToLoad,
       VoidCallback? onAdClosed,
+      int borderRadius = 12,
       Function(
         Ad ad,
         double valueMicros,
@@ -572,7 +575,8 @@ class NativeAdManager {
         'ad_banner_color':
             colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
         'gradient_orientation': gradientOrientationToString(
-            gradientOrientation ?? GradientOrientation.leftToRight)
+            gradientOrientation ?? GradientOrientation.leftToRight),
+        'cta_border_radius': borderRadius ?? 12
       }..removeWhere((key, value) => value is String && value.isEmpty),
       factoryId: size == NativeAdSize.layout1
           ? 'nativeLayout1Factory'
