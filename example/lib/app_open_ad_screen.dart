@@ -35,6 +35,7 @@ class AppOpenAdScreen extends StatelessWidget {
               },
               showLoading: true,
               reloadAfterShow: true,
+              forceShow: false,
               customLoadingOverlay: CustomLoadingOverlay());
         },
         label: 'Show App Open Ad',

@@ -12,9 +12,7 @@ abstract class AdController {
     VoidCallback? onAdClicked,
     VoidCallback? onAdDisplay,
     VoidCallback? onAdFailedToShow,
-    VoidCallback? onShowInOffsetTime,
     bool reloadAfterShow = true,
-    bool forceShow = true,
   });
 
   void dispose();

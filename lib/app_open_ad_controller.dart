@@ -105,18 +105,8 @@ class AppOpenAdController implements AdController {
     VoidCallback? onAdFailedToShow,
     VoidCallback? onAdDisplay,
     VoidCallback? onAdClicked,
-    VoidCallback? onShowInOffsetTime,
     bool reloadAfterShow = true,
-    bool forceShow = true,
   }) async {
-    if (!forceShow &&
-        MexaAds.instance.lastestTimeShowAOAAd
-                .add(MexaAds.instance.adConstant.appOpenOffsetTime)
-                .compareTo(DateTime.now()) >
-            0) {
-      onShowInOffsetTime?.call();
-      return;
-    }
     // Nếu quảng cáo chưa được load, return luôn
     if (_appOpenAd == null) {
       onAdFailedToShow?.call();

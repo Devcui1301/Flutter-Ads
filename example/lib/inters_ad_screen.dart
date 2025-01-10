@@ -35,6 +35,7 @@ class IntersAdScreen extends StatelessWidget {
               MexaAds.instance.loadAndShowInterAd(
                 context: context,
                 placement: "inter_1",
+                forceShow: false,
                 onAdLoaded: () {
                   log("Inter Ad: onAdLoaded");
                 },

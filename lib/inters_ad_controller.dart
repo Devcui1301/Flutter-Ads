@@ -109,17 +109,7 @@ class InterstitialAdController implements AdController {
     VoidCallback? onAdDisplay,
     VoidCallback? onAdFailedToShow,
     bool reloadAfterShow = false,
-    VoidCallback? onShowInOffsetTime,
-    bool forceShow = true,
   }) async {
-    if (!forceShow &&
-        MexaAds.instance.lastestShowIntersDateTime
-                .add(MexaAds.instance.adConstant.interstitialOffsetTime)
-                .compareTo(DateTime.now()) >
-            0) {
-      onShowInOffsetTime?.call();
-      return;
-    }
     // Nếu quảng cáo chưa được load, return luôn
     if (_interstitialAd == null) {
       onAdFailedToShow?.call();

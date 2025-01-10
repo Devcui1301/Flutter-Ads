@@ -25,8 +25,6 @@ class MexaAds {
   late final AdConstant _adConstant;
   AdConstant get adConstant => _adConstant;
 
-  DateTime lastestShowIntersDateTime = DateTime.now();
-
   bool isAdDisable = false;
   bool loadAdAfterInitializing = true;
   Widget? loadingAdWidget;
@@ -165,15 +163,22 @@ class MexaAds {
     bool reloadAfterShow = true,
     bool forceShow = true,
   }) {
-    if (isAdDisable) return;
+    if (!forceShow &&
+            MexaAds.instance.lastestTimeShowInterstitialAd
+                    .add(MexaAds.instance.adConstant.interstitialOffsetTime)
+                    .compareTo(DateTime.now()) >
+                0 ||
+        isAdDisable) {
+      onShowInOffsetTime?.call();
+      return;
+    }
     _intersAdController[placement]?.showAd(
-        onAdClicked: onAdClicked,
-        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
-        onAdDisplay: onAdDisplay,
-        onAdFailedToShow: onAdFailedToShow,
-        reloadAfterShow: reloadAfterShow,
-        forceShow: forceShow,
-        onShowInOffsetTime: onShowInOffsetTime);
+      onAdClicked: onAdClicked,
+      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+      onAdDisplay: onAdDisplay,
+      onAdFailedToShow: onAdFailedToShow,
+      reloadAfterShow: reloadAfterShow,
+    );
   }
 
   void loadAndShowInterAd({
@@ -191,8 +196,15 @@ class MexaAds {
     bool forceShow = true,
     Route? customLoadingOverlay,
   }) async {
-    if (isAdDisable) return;
-
+    if (!forceShow &&
+            MexaAds.instance.lastestTimeShowInterstitialAd
+                    .add(MexaAds.instance.adConstant.interstitialOffsetTime)
+                    .compareTo(DateTime.now()) >
+                0 ||
+        isAdDisable) {
+      onShowInOffsetTime?.call();
+      return;
+    }
     if (showLoading && context.mounted) {
       Navigator.of(context).push(customLoadingOverlay ?? LoadingOverlay());
     }
@@ -241,17 +253,23 @@ class MexaAds {
     Function()? onShowInOffsetTime,
     bool forceShow = true,
   }) {
-    if (isAdDisable) return;
-
+    if (!forceShow &&
+            MexaAds.instance.lastestTimeShowAOAAd
+                    .add(MexaAds.instance.adConstant.appOpenOffsetTime)
+                    .compareTo(DateTime.now()) >
+                0 ||
+        isAdDisable) {
+      onShowInOffsetTime?.call();
+      return;
+    }
     _appOpenAdController[placement]?.showAd(
-        onAdClicked: onAdClicked,
-        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
-        onAdDisplay: onAdDisplay,
-        onAdFailedToShow: onAdFailedToShow,
-        reloadAfterShow: true,
-        context: context,
-        forceShow: forceShow,
-        onShowInOffsetTime: onShowInOffsetTime);
+      onAdClicked: onAdClicked,
+      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+      onAdDisplay: onAdDisplay,
+      onAdFailedToShow: onAdFailedToShow,
+      reloadAfterShow: true,
+      context: context,
+    );
   }
 
   void loadAndShowAppOpenAd(
@@ -268,7 +286,15 @@ class MexaAds {
       Function()? onShowInOffsetTime,
       bool forceShow = true,
       Route? customLoadingOverlay}) async {
-    if (isAdDisable) return;
+    if (!forceShow &&
+            MexaAds.instance.lastestTimeShowAOAAd
+                    .add(MexaAds.instance.adConstant.appOpenOffsetTime)
+                    .compareTo(DateTime.now()) >
+                0 ||
+        isAdDisable) {
+      onShowInOffsetTime?.call();
+      return;
+    }
 
     if (showLoading && context.mounted) {
       Navigator.of(context).push(customLoadingOverlay ?? LoadingOverlay());
@@ -286,15 +312,14 @@ class MexaAds {
     }
     if (!context.mounted) return;
     showAppOpenAd(
-        placement: placement,
-        onAdClicked: onAdClicked,
-        context: context,
-        onAdDisplay: onAdDisplay,
-        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
-        onAdFailedToShow: onAdFailedToShow,
-        reloadAfterShow: reloadAfterShow,
-        forceShow: forceShow,
-        onShowInOffsetTime: onShowInOffsetTime);
+      placement: placement,
+      onAdClicked: onAdClicked,
+      context: context,
+      onAdDisplay: onAdDisplay,
+      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+      onAdFailedToShow: onAdFailedToShow,
+      reloadAfterShow: reloadAfterShow,
+    );
   }
 
   Future<bool> loadRewardAd({

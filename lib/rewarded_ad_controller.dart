@@ -109,9 +109,7 @@ class RewardedAdController implements AdController {
     VoidCallback? onAdClicked,
     VoidCallback? onAdDisplay,
     VoidCallback? onAdFailedToShow,
-    VoidCallback? onShowInOffsetTime,
     bool reloadAfterShow = true,
-    bool forceShow = true,
   }) async {
     // Nếu quảng cáo chưa được load, return luôn
     if (_rewardedAd == null) {
@@ -163,9 +161,6 @@ class RewardedAdController implements AdController {
       },
     );
 
-    _rewardedAd!.show(
-      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {},
-    );
     _rewardedAd!.show(
       onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {},
     );
