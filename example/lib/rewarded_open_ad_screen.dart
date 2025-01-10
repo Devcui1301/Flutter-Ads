@@ -12,17 +12,30 @@ class RewardedAdScreen extends StatelessWidget {
     return Center(
       child: PrimaryButton(
         onPressed: () {
-          MexaAds.instance.showRewardedAd(
-              context: context,
-              forceShow: true,
-              showLoading: true,
-              onAdDismissedFullScreenContent: () {
-                log('On AOA dismissed callback');
-              },
-              onAdClicked: () {
-                log('On AOA clicked callback');
-              },
-              placement: 'rewarded_1');
+          MexaAds.instance.loadAndShowRewardAd(
+            context: context,
+            placement: "reward_1",
+            onAdLoaded: () {
+              log("Reward: onAdLoaded");
+            },
+            onAdFailToLoad: () {
+              log("Reward: onAdFailToLoad");
+            },
+            onAdClicked: () {
+              log("Reward: onAdClicked");
+            },
+            onAdDisplay: () {
+              log("Reward: onAdDisplay");
+            },
+            onAdDismissedFullScreenContent: () {
+              log("Reward: onAdDismissedFullScreenContent");
+            },
+            onAdFailedToShow: () {
+              log("Reward: onAdFailedToShow");
+            },
+            showLoading: true,
+            reloadAfterShow: true,
+          );
         },
         label: 'Show Rewarded Ad',
       ),

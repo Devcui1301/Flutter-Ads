@@ -10,6 +10,7 @@ import 'package:mexa_ads/app_open_ad_controller.dart';
 import 'package:mexa_ads/inters_ad_controller.dart';
 import 'package:mexa_ads/rewarded_ad_controller.dart';
 import 'package:mexa_ads/utils.dart';
+import 'package:mexa_ads/widget/loading_dialog.dart';
 
 typedef RevenuePaidedListener = Function(AdRevenuePaidParams params)?;
 typedef AdClickedListener = Function(AdClickedParams params)?;
@@ -25,18 +26,8 @@ class MexaAds {
 
   DateTime lastestShowIntersDateTime = DateTime.now();
 
-  DateTime _lastestTimeShowInterstitialAd = DateTime.now();
-  DateTime _lastestTimeShowRewardAd = DateTime.now();
-  DateTime _lastestTimeShowAOAAd = DateTime.now();
-  bool _isFirstShowAOA = true;
-  bool _isFirstShowInters = true;
-  bool _isFirstShowRewared = true;
-
   bool isAdDisable = false;
   bool loadAdAfterInitializing = true;
-  // bool isShownAOAPending = false;
-  // bool isShownIntersPending = false;
-  // bool isShownRewardedPending = false;
   Widget? loadingAdWidget;
 
   // native ad decoration
@@ -103,22 +94,22 @@ class MexaAds {
           ..setAdPlacement(key),
       );
     });
-    // adConstant.appOpenId.forEach((key, value) {
-    //   _appOpenAdController.putIfAbsent(
-    //     key,
-    //     () => AppOpenAdController()
-    //       ..setAdId(value)
-    //       ..setAdPlacement(key),
-    //   );
-    // });
-    // adConstant.rewardedAdId.forEach((key, value) {
-    //   _rewardedAdController.putIfAbsent(
-    //     key,
-    //     () => RewardedAdController()
-    //       ..setAdId(value)
-    //       ..setAdPlacement(key),
-    //   );
-    // });
+    adConstant.appOpenId.forEach((key, value) {
+      _appOpenAdController.putIfAbsent(
+        key,
+        () => AppOpenAdController()
+          ..setAdId(value)
+          ..setAdPlacement(key),
+      );
+    });
+    adConstant.rewardedAdId.forEach((key, value) {
+      _rewardedAdController.putIfAbsent(
+        key,
+        () => RewardedAdController()
+          ..setAdId(value)
+          ..setAdPlacement(key),
+      );
+    });
 
     if (_adConstant.interstitialId.isNotEmpty) {
       adConstant.interstitialId.forEach((key, value) {
@@ -166,13 +157,52 @@ class MexaAds {
     Function()? onAdClicked,
     Function()? onAdDisplay,
     Function()? onAdFailedToShow,
+    bool reloadAfterShow = true,
   }) {
     _intersAdController[placement]?.showAd(
         context: context,
         onAdClicked: onAdClicked,
         onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
         onAdDisplay: onAdDisplay,
-        onAdFailedToShow: onAdFailedToShow);
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow);
+  }
+
+  void loadAndShowInterAd(
+      {required String placement,
+      required BuildContext context,
+      VoidCallback? onAdLoaded,
+      VoidCallback? onAdFailToLoad,
+      Function()? onAdDismissedFullScreenContent,
+      Function()? onAdClicked,
+      Function()? onAdDisplay,
+      Function()? onAdFailedToShow,
+      bool showLoading = true,
+      bool reloadAfterShow = true,
+      Route? customLoadingOverlay}) async {
+    if (showLoading && context.mounted) {
+      Navigator.of(context).push(customLoadingOverlay ?? LoadingOverlay());
+    }
+    await loadInterAd(
+        placement: placement,
+        onAdLoaded: onAdLoaded,
+        onAdFailToLoad: onAdLoaded);
+    if (showLoading && context.mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!context.mounted) return;
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+    }
+    if (!context.mounted) return;
+    showInterAd(
+        placement: placement,
+        context: context,
+        onAdClicked: onAdClicked,
+        onAdDisplay: onAdDisplay,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow);
   }
 
   Future<bool> loadAppOpenAd({
@@ -193,13 +223,53 @@ class MexaAds {
     Function()? onAdClicked,
     Function()? onAdDisplay,
     Function()? onAdFailedToShow,
+    bool reloadAfterShow = true,
   }) {
     _appOpenAdController[placement]?.showAd(
+      context: context,
+      onAdClicked: onAdClicked,
+      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+      onAdDisplay: onAdDisplay,
+      onAdFailedToShow: onAdFailedToShow,
+      reloadAfterShow: true,
+    );
+  }
+
+  void loadAndShowAppOpenAd(
+      {required String placement,
+      required BuildContext context,
+      VoidCallback? onAdLoaded,
+      VoidCallback? onAdFailToLoad,
+      Function()? onAdDismissedFullScreenContent,
+      Function()? onAdClicked,
+      Function()? onAdDisplay,
+      Function()? onAdFailedToShow,
+      bool showLoading = true,
+      bool reloadAfterShow = true,
+      Route? customLoadingOverlay}) async {
+    if (showLoading && context.mounted) {
+      Navigator.of(context).push(customLoadingOverlay ?? LoadingOverlay());
+    }
+    await loadAppOpenAd(
+        placement: placement,
+        onAdLoaded: onAdLoaded,
+        onAdFailToLoad: onAdLoaded);
+    if (showLoading && context.mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!context.mounted) return;
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+    }
+    if (!context.mounted) return;
+    showAppOpenAd(
+        placement: placement,
         context: context,
         onAdClicked: onAdClicked,
-        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
         onAdDisplay: onAdDisplay,
-        onAdFailedToShow: onAdFailedToShow);
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow);
   }
 
   Future<bool> loadRewardAd({
@@ -220,13 +290,52 @@ class MexaAds {
     Function()? onAdClicked,
     Function()? onAdDisplay,
     Function()? onAdFailedToShow,
+    bool reloadAfterShow = true,
   }) {
     _rewardedAdController[placement]?.showAd(
         context: context,
         onAdClicked: onAdClicked,
         onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
         onAdDisplay: onAdDisplay,
-        onAdFailedToShow: onAdFailedToShow);
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow);
+  }
+
+  void loadAndShowRewardAd(
+      {required String placement,
+      required BuildContext context,
+      VoidCallback? onAdLoaded,
+      VoidCallback? onAdFailToLoad,
+      Function()? onAdDismissedFullScreenContent,
+      Function()? onAdClicked,
+      Function()? onAdDisplay,
+      Function()? onAdFailedToShow,
+      bool showLoading = true,
+      bool reloadAfterShow = true,
+      Route? customLoadingOverlay}) async {
+    if (showLoading && context.mounted) {
+      Navigator.of(context).push(customLoadingOverlay ?? LoadingOverlay());
+    }
+    await loadRewardAd(
+        placement: placement,
+        onAdLoaded: onAdLoaded,
+        onAdFailToLoad: onAdLoaded);
+    if (showLoading && context.mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!context.mounted) return;
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+    }
+    if (!context.mounted) return;
+    showRewardAd(
+        placement: placement,
+        context: context,
+        onAdClicked: onAdClicked,
+        onAdDisplay: onAdDisplay,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow);
   }
 
   void dispose() {
@@ -258,7 +367,6 @@ class MexaAds {
       VoidCallback? onAdFailedToLoad,
       VoidCallback? onAdClicked,
       VoidCallback? onAdClosed,
-      int borderRadius = 12,
       Function(
         Ad ad,
         double valueMicros,
@@ -282,7 +390,6 @@ class MexaAds {
       adTitleTextColor: adTitleTextColor,
       adBodyTextColor: adBodyTextColor,
       gradientOrientation: gradientOrientation,
-      borderRadius: borderRadius,
     );
   }
 }
@@ -432,7 +539,6 @@ class NativeAdManager {
       VoidCallback? onAdLoaded,
       VoidCallback? onAdFailedToLoad,
       VoidCallback? onAdClosed,
-      int borderRadius = 12,
       Function(
         Ad ad,
         double valueMicros,
@@ -479,8 +585,7 @@ class NativeAdManager {
         'ad_banner_color':
             colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
         'gradient_orientation': gradientOrientationToString(
-            gradientOrientation ?? GradientOrientation.leftToRight),
-        'cta_border_radius': borderRadius ?? 12
+            gradientOrientation ?? GradientOrientation.leftToRight)
       }..removeWhere((key, value) => value is String && value.isEmpty),
       factoryId: size == NativeAdSize.layout1
           ? 'nativeLayout1Factory'

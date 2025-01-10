@@ -36,12 +36,6 @@ class InterstitialAdController implements AdController {
         return false; // Load thất bại
       }
     }
-    // Nếu đã có quảng cáo hoặc đang load, không load lại
-    if (_loadingCompleter != null && !_loadingCompleter!.isCompleted) {
-      log("Nếu đã có quảng cáo hoặc đang load, không load lại");
-      await _loadingCompleter!.future;
-      return true;
-    }
 
     // Nếu đã có quảng cáo sẵn sàng, không cần load lại
     if (_interstitialAd != null) {

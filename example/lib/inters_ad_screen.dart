@@ -32,21 +32,29 @@ class IntersAdScreen extends StatelessWidget {
           ),
           PrimaryButton(
             onPressed: () {
-              MexaAds.instance.showInterAd(
-                onAdDisplay: () {
-                  log('Test Inter Ad: On inters ad display callback');
+              MexaAds.instance.loadAndShowInterAd(
+                context: context,
+                placement: "inter_1",
+                onAdLoaded: () {
+                  log("Inter Ad: onAdLoaded");
                 },
-                onAdFailedToShow: () {
-                  log('Test Inter Ad: On inters ad failed to show callback');
-                },
-                onAdDismissedFullScreenContent: () {
-                  log('Test Inter Ad: On inters ad dismissed callback');
+                onAdFailToLoad: () {
+                  log("Inter Ad: onAdFailToLoad");
                 },
                 onAdClicked: () {
-                  log('Test Inter Ad: On inters ad clicked callback');
+                  log("Inter Ad: onAdClicked");
                 },
-                placement: 'inter_1',
-                context: context,
+                onAdDisplay: () {
+                  log("Inter Ad: onAdDisplay");
+                },
+                onAdDismissedFullScreenContent: () {
+                  log("Inter Ad: onAdDismissedFullScreenContent");
+                },
+                onAdFailedToShow: () {
+                  log("Inter Ad: onAdFailedToShow");
+                },
+                showLoading: true,
+                reloadAfterShow: true,
               );
             },
             label: 'Show Interstitial Ad',

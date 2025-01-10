@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
 import 'package:mexa_ads/mexa_ads.dart';
+import 'package:mexa_ads/widget/aoa_place_holder.dart';
 
 class AppOpenAdController implements AdController {
   final AdRequest _request = const AdRequest();
@@ -31,12 +32,6 @@ class AppOpenAdController implements AdController {
         onAdFailedToLoad?.call();
         return false; // Load thất bại
       }
-    }
-    // Nếu đã có quảng cáo hoặc đang load, không load lại
-    if (_loadingCompleter != null && !_loadingCompleter!.isCompleted) {
-      log("Nếu đã có quảng cáo hoặc đang load, không load lại");
-      await _loadingCompleter!.future;
-      return true;
     }
 
     // Nếu đã có quảng cáo sẵn sàng
@@ -106,7 +101,6 @@ class AppOpenAdController implements AdController {
   @override
   Future<void> showAd({
     required BuildContext context,
-    VoidCallback? onAdLoaded,
     VoidCallback? onAdDismissedFullScreenContent,
     VoidCallback? onAdFailedToShow,
     VoidCallback? onAdDisplay,
@@ -135,6 +129,7 @@ class AppOpenAdController implements AdController {
     _appOpenAd?.fullScreenContentCallback =
         FullScreenContentCallback<AppOpenAd>(
       onAdDismissedFullScreenContent: (ad) {
+        _hideAOAPlaceHolder(context);
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _appOpenAd = null;
@@ -155,6 +150,7 @@ class AppOpenAdController implements AdController {
         ));
       },
       onAdImpression: (ad) {
+        _showAOAPlaceHolder(context);
         if (reloadAfterShow) {
           _loadAdAppOpen();
         }
@@ -163,6 +159,20 @@ class AppOpenAdController implements AdController {
     );
 
     _appOpenAd?.show();
+  }
+
+  void _showAOAPlaceHolder(BuildContext? context) {
+    if (context != null && context.mounted) {
+      Navigator.of(context).push(AOAPlaceHolder());
+    }
+  }
+
+  void _hideAOAPlaceHolder(BuildContext? context) {
+    if (context != null && context.mounted) {
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+    }
   }
 
   @override
