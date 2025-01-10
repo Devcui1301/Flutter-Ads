@@ -7,12 +7,14 @@ abstract class AdController {
   });
 
   Future<void> showAd({
-    required BuildContext context,
+    BuildContext? context,
     VoidCallback? onAdDismissedFullScreenContent,
     VoidCallback? onAdClicked,
     VoidCallback? onAdDisplay,
     VoidCallback? onAdFailedToShow,
+    VoidCallback? onShowInOffsetTime,
     bool reloadAfterShow = true,
+    bool forceShow = true,
   });
 
   void dispose();

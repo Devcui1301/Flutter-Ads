@@ -102,13 +102,24 @@ class InterstitialAdController implements AdController {
   }
 
   @override
-  Future<void> showAd(
-      {required BuildContext context,
-      VoidCallback? onAdDismissedFullScreenContent,
-      VoidCallback? onAdClicked,
-      VoidCallback? onAdDisplay,
-      VoidCallback? onAdFailedToShow,
-      bool reloadAfterShow = false}) async {
+  Future<void> showAd({
+    BuildContext? context,
+    VoidCallback? onAdDismissedFullScreenContent,
+    VoidCallback? onAdClicked,
+    VoidCallback? onAdDisplay,
+    VoidCallback? onAdFailedToShow,
+    bool reloadAfterShow = false,
+    VoidCallback? onShowInOffsetTime,
+    bool forceShow = true,
+  }) async {
+    if (!forceShow &&
+        MexaAds.instance.lastestShowIntersDateTime
+                .add(MexaAds.instance.adConstant.interstitialOffsetTime)
+                .compareTo(DateTime.now()) >
+            0) {
+      onShowInOffsetTime?.call();
+      return;
+    }
     // Nếu quảng cáo chưa được load, return luôn
     if (_interstitialAd == null) {
       onAdFailedToShow?.call();
@@ -135,6 +146,7 @@ class InterstitialAdController implements AdController {
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _interstitialAd = null; // Reset sau khi hiển thị
+        MexaAds.instance.lastestTimeShowInterstitialAd = DateTime.now();
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         onAdFailedToShow?.call();

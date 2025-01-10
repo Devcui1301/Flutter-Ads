@@ -103,13 +103,16 @@ class RewardedAdController implements AdController {
   }
 
   @override
-  Future<void> showAd(
-      {BuildContext? context,
-      VoidCallback? onAdDismissedFullScreenContent,
-      VoidCallback? onAdClicked,
-      VoidCallback? onAdDisplay,
-      VoidCallback? onAdFailedToShow,
-      bool reloadAfterShow = false}) async {
+  Future<void> showAd({
+    BuildContext? context,
+    VoidCallback? onAdDismissedFullScreenContent,
+    VoidCallback? onAdClicked,
+    VoidCallback? onAdDisplay,
+    VoidCallback? onAdFailedToShow,
+    VoidCallback? onShowInOffsetTime,
+    bool reloadAfterShow = true,
+    bool forceShow = true,
+  }) async {
     // Nếu quảng cáo chưa được load, return luôn
     if (_rewardedAd == null) {
       onAdFailedToShow?.call();
@@ -160,6 +163,9 @@ class RewardedAdController implements AdController {
       },
     );
 
+    _rewardedAd!.show(
+      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {},
+    );
     _rewardedAd!.show(
       onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {},
     );

@@ -100,13 +100,23 @@ class AppOpenAdController implements AdController {
 
   @override
   Future<void> showAd({
-    required BuildContext context,
+    BuildContext? context,
     VoidCallback? onAdDismissedFullScreenContent,
     VoidCallback? onAdFailedToShow,
     VoidCallback? onAdDisplay,
     VoidCallback? onAdClicked,
+    VoidCallback? onShowInOffsetTime,
     bool reloadAfterShow = true,
+    bool forceShow = true,
   }) async {
+    if (!forceShow &&
+        MexaAds.instance.lastestTimeShowAOAAd
+                .add(MexaAds.instance.adConstant.appOpenOffsetTime)
+                .compareTo(DateTime.now()) >
+            0) {
+      onShowInOffsetTime?.call();
+      return;
+    }
     // Nếu quảng cáo chưa được load, return luôn
     if (_appOpenAd == null) {
       onAdFailedToShow?.call();
@@ -126,6 +136,7 @@ class AppOpenAdController implements AdController {
       MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
       MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
     };
+
     _appOpenAd?.fullScreenContentCallback =
         FullScreenContentCallback<AppOpenAd>(
       onAdDismissedFullScreenContent: (ad) {
@@ -133,6 +144,7 @@ class AppOpenAdController implements AdController {
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _appOpenAd = null;
+        MexaAds.instance.lastestTimeShowAOAAd = DateTime.now();
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         onAdFailedToShow?.call();
@@ -157,7 +169,6 @@ class AppOpenAdController implements AdController {
         onAdDisplay?.call();
       },
     );
-
     _appOpenAd?.show();
   }
 
