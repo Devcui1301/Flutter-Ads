@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:adjust_sdk/adjust.dart';
 import 'package:adjust_sdk/adjust_ad_revenue.dart';
 import 'package:adjust_sdk/adjust_config.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
@@ -135,7 +136,8 @@ class MexaAds {
   }
 
   void _initAdjust(String adjustkey) {
-    AdjustConfig config = AdjustConfig(adjustkey, AdjustEnvironment.sandbox);
+    AdjustConfig config = AdjustConfig(adjustkey,
+        kDebugMode ? AdjustEnvironment.sandbox : AdjustEnvironment.production);
     Adjust.initSdk(config);
   }
 
@@ -414,6 +416,7 @@ class AdConstant {
   double nativeAdHeightLayout3;
   double nativeAdHeightLayout4;
   double nativeAdHeightLayoutNoMedia;
+  double nativeAdHeightLayoutNoMedia2;
 
   AdConstant({
     this.bannerAnchorId = const {},
@@ -431,10 +434,19 @@ class AdConstant {
     this.nativeAdHeightLayout3 = 240,
     this.nativeAdHeightLayout4 = 160,
     this.nativeAdHeightLayoutNoMedia = 80,
+    this.nativeAdHeightLayoutNoMedia2 = 140,
   });
 }
 
-enum NativeAdSize { layout1, layout2, layout3, layout4, fullScreen, noMedia }
+enum NativeAdSize {
+  layout1,
+  layout2,
+  layout3,
+  layout4,
+  fullScreen,
+  noMedia,
+  noMedia2
+}
 
 enum AdType {
   banner,
