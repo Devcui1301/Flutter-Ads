@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -195,7 +197,11 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                                 ? MexaAds.instance.adConstant
                                     .nativeAdHeightLayoutNoMedia
                                     .toInt()
-                                : -1
+                                : widget.size == NativeAdSize.noMedia2
+                                    ? MexaAds.instance.adConstant
+                                        .nativeAdHeightLayoutNoMedia2
+                                        .toInt()
+                                    : -1
             : widget.adHeight!.toInt(),
         'ad_banner_color': colorToHexString(
             widget.adBannerColor ?? MexaAds.instance.primaryColor),
@@ -217,23 +223,18 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                               ? 'nativeAdNoMedia2Factory'
                               : 'nativeAdFullScreenFactory',
       listener: NativeAdListener(
-        onAdLoaded: (Ad ad) {
+        onAdLoaded: (Ad ad) async {
+          logger("Native: Không có Completer, tải và hiển thị quảng cáo");
+
           logger('.............$NativeAd loaded.');
           error = null;
+          await Future.delayed(const Duration(milliseconds: 200));
           if (mounted) {
-            Future.delayed(const Duration(milliseconds: 100)).then((value) {
-              if (mounted) {
-                setState(() {
-                  _nativeAdIsLoaded = true;
-                });
-              }
+            setState(() {
+              _nativeAdIsLoaded = true;
             });
           }
-          // Future.delayed(const Duration(milliseconds: 700)).then((value) {
-          //   if (mounted) {
-          //     setState(() {});
-          //   }
-          // });
+
           widget.onAdLoaded?.call();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
@@ -294,29 +295,71 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
 
   @override
   void initState() {
-    if (MexaAds.instance.isAdDisable == false) {
-      NativeAdManager manager = MexaAds.instance.nativeAdManager;
-      if (manager.isAdLoaded(widget.placement)) {
-        _nativeAd = manager.nativeAds[widget.placement];
-        Future.delayed(const Duration(milliseconds: 100)).then((value) {
+    initNativeAd();
+
+    super.initState();
+  }
+
+  void initNativeAd() async {
+    if (MexaAds.instance.isAdDisable) return;
+    NativeAdManager manager = MexaAds.instance.nativeAdManager;
+
+    // Kiểm tra nếu completer tồn tại và chưa hoàn thành
+    if (manager.loadingNativeCompleters[widget.placement] != null) {
+      Completer<void> completer =
+          manager.loadingNativeCompleters[widget.placement]!;
+
+      if (!completer.isCompleted) {
+        logger("Native: Chờ cho việc tải hoàn thành");
+        // Chờ cho việc tải hoàn thành
+        completer.future.then((_) async {
+          await Future.delayed(const Duration(milliseconds: 200));
+
           if (mounted) {
             setState(() {
+              // Quảng cáo đã tải xong, cập nhật trạng thái hiển thị
               _nativeAdIsLoaded = true;
+              _nativeAd = manager.nativeAds[widget.placement];
             });
           }
+          manager.nativeAds.remove(widget.placement);
+          manager.loadingNativeCompleters.remove(widget.placement);
+        }).catchError((error) async {
+          await Future.delayed(const Duration(milliseconds: 200));
+          logger("Native: Xử lý lỗi khi tải quảng cáo");
+
+          // Xử lý lỗi khi tải quảng cáo
+          if (mounted) {
+            setState(() {
+              this.error = LoadAdError(
+                  1,
+                  "",
+                  "",
+                  const ResponseInfo(
+                    responseExtras: {},
+                  ));
+            });
+          }
+          print("Error while loading ad: $error");
         });
-        // Future.delayed(const Duration(milliseconds: 700)).then((value) {
-        //   if (mounted) {
-        //     setState(() {});
-        //   }
-        // });
-        manager.nativeAds.remove(widget.placement);
-        manager.isAdLoadeds.remove(widget.placement);
       } else {
-        _loadAd();
+        logger("Native: Nếu đã hoàn thành, cập nhật trạng thái hiển thị ngay");
+
+        await Future.delayed(const Duration(milliseconds: 200));
+        // Nếu đã hoàn thành, cập nhật trạng thái hiển thị ngay
+        if (mounted) {
+          setState(() {
+            _nativeAdIsLoaded = true;
+            _nativeAd = manager.nativeAds[widget.placement];
+          });
+        }
+        manager.nativeAds.remove(widget.placement);
+        manager.loadingNativeCompleters.remove(widget.placement);
       }
+    } else {
+      // Nếu không có completer, bắt đầu tải quảng cáo
+      _loadAd();
     }
-    super.initState();
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:adjust_sdk/adjust.dart';
@@ -584,7 +585,10 @@ class AdClickedParams {
 class NativeAdManager {
   Map<String, NativeAd?> nativeAds = <String, NativeAd?>{};
 
-  Map<String, bool> isAdLoadeds = <String, bool>{};
+  // Map<String, bool> isAdLoadeds = <String, bool>{};
+
+  Map<String, Completer<void>?> loadingNativeCompleters =
+      <String, Completer<void>?>{};
 
   NativeAdManager();
 
@@ -610,115 +614,133 @@ class NativeAdManager {
         String currencyCode,
         AdType adType,
       )? onRevenuePaid}) async {
-    nativeAds[placement] = NativeAd(
-      adUnitId: MexaAds.instance.adConstant.nativeId[placement] ?? '',
-      request: const AdRequest(),
-      nativeAdOptions: size == NativeAdSize.fullScreen
-          ? NativeAdOptions(
-              adChoicesPlacement: AdChoicesPlacement.topRightCorner,
-            )
-          : null,
-      customOptions: {
-        'bg_color': colorToHexString(
-            adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
-        'cta_bg_color': convertColorsToHex(
-            adCTABackgroundColor ?? MexaAds.instance.nativeCTABackgroundColor),
-        'cta_text_color': colorToHexString(
-            adCTATextColor ?? MexaAds.instance.nativeCTATitleStyle?.color),
-        'title_text_color': colorToHexString(
-            adTitleTextColor ?? MexaAds.instance.nativeTitleStyle?.color),
-        'body_text_color': colorToHexString(
-            adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
-        'ad_height': adHeight == null
-            ? size == NativeAdSize.layout1
-                ? MexaAds.instance.adConstant.nativeAdHeightLayout1.toInt()
-                : size == NativeAdSize.layout2
-                    ? MexaAds.instance.adConstant.nativeAdHeightLayout2.toInt()
-                    : size == NativeAdSize.layout3
-                        ? MexaAds.instance.adConstant.nativeAdHeightLayout3
-                            .toInt()
-                        : size == NativeAdSize.layout4
-                            ? MexaAds.instance.adConstant.nativeAdHeightLayout4
-                                .toInt()
-                            : size == NativeAdSize.noMedia
-                                ? MexaAds.instance.adConstant
-                                    .nativeAdHeightLayoutNoMedia
-                                    .toInt()
-                                : -1
-            : adHeight.toInt(),
-        'ad_banner_color':
-            colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
-        'gradient_orientation': gradientOrientationToString(
-            gradientOrientation ?? GradientOrientation.leftToRight),
-        'cta_border_radius': borderRadius
-      }..removeWhere((key, value) => value is String && value.isEmpty),
-      factoryId: size == NativeAdSize.layout1
-          ? 'nativeLayout1Factory'
-          : size == NativeAdSize.layout2
-              ? 'nativeLayout2Factory'
-              : size == NativeAdSize.layout3
-                  ? 'nativeLayout3Factory'
-                  : size == NativeAdSize.layout4
-                      ? 'nativeLayout4Factory'
-                      : size == NativeAdSize.noMedia
-                          ? 'nativeAdNoMediaFactory'
-                          : 'nativeAdFullScreenFactory',
-      listener: NativeAdListener(
-        onAdLoaded: (Ad ad) {
-          logger('NativeAd $placement loaded.');
-          isAdLoadeds[placement] = true;
-          onAdLoaded?.call();
-        },
-        onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          logger('NativeAd $placement failed to load: $error');
-          ad.dispose();
-          isAdLoadeds[placement] = false;
-          onAdFailedToLoad?.call();
-        },
-        onAdClosed: (Ad ad) {
-          logger('..............$NativeAd onAdClosed.');
-          onAdClosed?.call();
-        },
-        onAdClicked: (ad) {
-          MexaAds.instance.adClickedListener?.call(
-            AdClickedParams(
-              networkName:
-                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
-                      '',
-              adUnitId: ad.adUnitId,
-              adType: AdType.native.value,
-              placement: placement,
-            ),
-          );
-        },
-        onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-          logger(
-              '.............. NativeAd onPaidEvent ${'$valueMicros $precision'}');
-          onRevenuePaid?.call(
-            ad,
-            valueMicros,
-            precision,
-            currencyCode,
-            AdType.native,
-          );
-          MexaAds.instance.adRevenuePaidListener?.call(
-            AdRevenuePaidParams(
-              networkName:
-                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
-                      '',
-              revenue: valueMicros / 1000000.0,
-              adUnitId: ad.adUnitId,
-              adType: AdType.native.value,
-              placement: placement,
-              country: currencyCode,
-            ),
-          );
-        },
-      ),
-    )..load();
-  }
+    // Kiểm tra nếu đang load
+    if (loadingNativeCompleters[placement]?.isCompleted == false) {
+      await loadingNativeCompleters[placement]!.future;
+      return;
+    }
 
-  bool isAdLoaded(String placement) {
-    return isAdLoadeds[placement] ?? false;
+    // Khởi tạo Completer mới
+    final completer = Completer<void>();
+    loadingNativeCompleters[placement] = completer;
+
+    try {
+      nativeAds[placement] = NativeAd(
+        adUnitId: MexaAds.instance.adConstant.nativeId[placement] ?? '',
+        request: const AdRequest(),
+        nativeAdOptions: size == NativeAdSize.fullScreen
+            ? NativeAdOptions(
+                adChoicesPlacement: AdChoicesPlacement.topRightCorner,
+              )
+            : null,
+        customOptions: {
+          'bg_color': colorToHexString(
+              adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
+          'cta_bg_color': convertColorsToHex(adCTABackgroundColor ??
+              MexaAds.instance.nativeCTABackgroundColor),
+          'cta_text_color': colorToHexString(
+              adCTATextColor ?? MexaAds.instance.nativeCTATitleStyle?.color),
+          'title_text_color': colorToHexString(
+              adTitleTextColor ?? MexaAds.instance.nativeTitleStyle?.color),
+          'body_text_color': colorToHexString(
+              adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
+          'ad_height': adHeight == null
+              ? size == NativeAdSize.layout1
+                  ? MexaAds.instance.adConstant.nativeAdHeightLayout1.toInt()
+                  : size == NativeAdSize.layout2
+                      ? MexaAds.instance.adConstant.nativeAdHeightLayout2
+                          .toInt()
+                      : size == NativeAdSize.layout3
+                          ? MexaAds.instance.adConstant.nativeAdHeightLayout3
+                              .toInt()
+                          : size == NativeAdSize.layout4
+                              ? MexaAds
+                                  .instance.adConstant.nativeAdHeightLayout4
+                                  .toInt()
+                              : size == NativeAdSize.noMedia
+                                  ? MexaAds.instance.adConstant
+                                      .nativeAdHeightLayoutNoMedia
+                                      .toInt()
+                                  : size == NativeAdSize.noMedia2
+                                      ? MexaAds.instance.adConstant
+                                          .nativeAdHeightLayoutNoMedia2
+                                      : -1
+              : adHeight.toInt(),
+          'ad_banner_color':
+              colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
+          'gradient_orientation': gradientOrientationToString(
+              gradientOrientation ?? GradientOrientation.leftToRight),
+          'cta_border_radius': borderRadius
+        }..removeWhere((key, value) => value is String && value.isEmpty),
+        factoryId: size == NativeAdSize.layout1
+            ? 'nativeLayout1Factory'
+            : size == NativeAdSize.layout2
+                ? 'nativeLayout2Factory'
+                : size == NativeAdSize.layout3
+                    ? 'nativeLayout3Factory'
+                    : size == NativeAdSize.layout4
+                        ? 'nativeLayout4Factory'
+                        : size == NativeAdSize.noMedia
+                            ? 'nativeAdNoMediaFactory'
+                            : size == NativeAdSize.noMedia2
+                                ? 'nativeAdNoMedia2Factory'
+                                : 'nativeAdFullScreenFactory',
+        listener: NativeAdListener(
+          onAdLoaded: (Ad ad) {
+            logger('NativeAd $placement loaded.');
+            completer.complete();
+            onAdLoaded?.call();
+          },
+          onAdFailedToLoad: (Ad ad, LoadAdError error) {
+            logger('NativeAd $placement failed to load: $error');
+            ad.dispose();
+            completer.completeError(error);
+            onAdFailedToLoad?.call();
+          },
+          onAdClosed: (Ad ad) {
+            logger('..............$NativeAd onAdClosed.');
+            onAdClosed?.call();
+          },
+          onAdClicked: (ad) {
+            MexaAds.instance.adClickedListener?.call(
+              AdClickedParams(
+                networkName:
+                    ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                        '',
+                adUnitId: ad.adUnitId,
+                adType: AdType.native.value,
+                placement: placement,
+              ),
+            );
+          },
+          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+            logger(
+                '.............. NativeAd onPaidEvent ${'$valueMicros $precision'}');
+            onRevenuePaid?.call(
+              ad,
+              valueMicros,
+              precision,
+              currencyCode,
+              AdType.native,
+            );
+            MexaAds.instance.adRevenuePaidListener?.call(
+              AdRevenuePaidParams(
+                networkName:
+                    ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                        '',
+                revenue: valueMicros / 1000000.0,
+                adUnitId: ad.adUnitId,
+                adType: AdType.native.value,
+                placement: placement,
+                country: currencyCode,
+              ),
+            );
+          },
+        ),
+      )..load(); // Chờ hoàn tất
+      await completer.future;
+    } catch (e) {
+      logger('Error loading NativeAd $placement: $e');
+    }
   }
 }
