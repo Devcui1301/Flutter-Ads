@@ -55,6 +55,7 @@ class RewardedAdController implements AdController {
         onAdFailedToLoad?.call();
       }
     });
+    log("Không có Completer bắt đầu load");
     // Bắt đầu load quảng cáo
     _loadAdReward(
       onAdLoaded: () {
@@ -83,7 +84,7 @@ class RewardedAdController implements AdController {
   }
 
   void _loadAdReward(
-      {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
+      {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) {
     RewardedAd.load(
       adUnitId: _adId,
       request: _request,
@@ -146,7 +147,7 @@ class RewardedAdController implements AdController {
         ad.dispose();
         _rewardedAd = null; // Reset sau khi hiển thị
         if (reloadAfterShow) {
-          _loadAdReward();
+          loadAd();
         }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {

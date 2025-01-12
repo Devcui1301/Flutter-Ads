@@ -146,7 +146,7 @@ class InterstitialAdController implements AdController {
         _interstitialAd = null; // Reset sau khi hiển thị
         MexaAds.instance.lastestTimeShowInterstitialAd = DateTime.now();
         if (reloadAfterShow) {
-          _loadAdInternal();
+          loadAd();
         }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {

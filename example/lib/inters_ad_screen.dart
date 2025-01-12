@@ -32,10 +32,21 @@ class IntersAdScreen extends StatelessWidget {
           ),
           PrimaryButton(
             onPressed: () {
+              MexaAds.instance.showInterAd(
+                placement: 'inter_1',
+              );
+            },
+            label: 'Show Interstitial Ad',
+          ),
+          const SizedBox(
+            height: 16,
+          ),
+          PrimaryButton(
+            onPressed: () {
               MexaAds.instance.loadAndShowInterAd(
                 context: context,
                 placement: "inter_1",
-                forceShow: false,
+                forceShow: true,
                 onAdLoaded: () {
                   log("Inter Ad: onAdLoaded");
                 },
@@ -58,7 +69,7 @@ class IntersAdScreen extends StatelessWidget {
                 reloadAfterShow: true,
               );
             },
-            label: 'Show Interstitial Ad',
+            label: 'Load and Show Interstitial Ad',
           ),
         ],
       ),

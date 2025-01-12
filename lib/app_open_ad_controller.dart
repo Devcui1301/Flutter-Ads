@@ -142,7 +142,7 @@ class AppOpenAdController implements AdController {
         _appOpenAd = null;
         MexaAds.instance.lastestTimeShowAOAAd = DateTime.now();
         if (reloadAfterShow) {
-          _loadAdAppOpen();
+          loadAd();
         }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
