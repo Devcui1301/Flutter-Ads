@@ -24,9 +24,9 @@ class AppOpenAdController implements AdController {
   Future<bool> loadAd(
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
     // Nếu đang load, chờ hoàn thành
-    if (_loadingCompleter != null && !_loadingCompleter!.isCompleted) {
+    if (_loadingCompleter != null && _loadingCompleter?.isCompleted == false) {
       try {
-        await _loadingCompleter!.future;
+        await _loadingCompleter?.future;
         return true; // Load thành công
       } catch (_) {
         onAdFailedToLoad?.call();
@@ -43,12 +43,32 @@ class AppOpenAdController implements AdController {
     // Bắt đầu load quảng cáo
     _loadingCompleter = Completer<void>();
     _numLoadAttempts = 0;
-
+    Timer timeoutTimer = Timer(MexaAds.instance.adConstant.timeoutLoadAd, () {
+      if (_loadingCompleter?.isCompleted == false) {
+        _loadingCompleter?.completeError("Ad load timeout");
+        _loadingCompleter = null;
+        _appOpenAd = null;
+        onAdFailedToLoad?.call();
+      }
+    });
     // Bắt đầu load quảng cáo
-    _loadAdAppOpen(onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailedToLoad);
+    _loadAdAppOpen(
+      onAdLoaded: () {
+        _loadingCompleter?.complete();
+        _loadingCompleter = null;
+        timeoutTimer.cancel();
+        onAdLoaded?.call();
+      },
+      onAdFailedToLoad: () {
+        _loadingCompleter?.completeError("Ad load failed");
+        _loadingCompleter = null;
+        timeoutTimer.cancel();
+        onAdFailedToLoad?.call();
+      },
+    );
     // Chờ quá trình load hoàn tất
     try {
-      await _loadingCompleter!.future;
+      await _loadingCompleter?.future;
       return true; // Load thành công
     } catch (e) {
       onAdFailedToLoad?.call(); // Gọi callback khi thất bại
@@ -58,29 +78,17 @@ class AppOpenAdController implements AdController {
 
   void _loadAdAppOpen(
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) {
-    Timer timeoutTimer = Timer(MexaAds.instance.adConstant.timeoutLoadAd, () {
-      if (!_loadingCompleter!.isCompleted) {
-        _loadingCompleter?.completeError("Ad load timeout");
-        _loadingCompleter = null;
-        _appOpenAd = null;
-        onAdFailedToLoad?.call();
-      }
-    });
     AppOpenAd.load(
       adUnitId: _adId,
       request: _request,
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
-          timeoutTimer.cancel();
           _appOpenAd = ad;
           _numLoadAttempts = 0;
-          _appOpenAd!.setImmersiveMode(true);
-          _loadingCompleter?.complete();
-          _loadingCompleter = null;
+          _appOpenAd?.setImmersiveMode(true);
           onAdLoaded?.call();
         },
         onAdFailedToLoad: (error) {
-          timeoutTimer.cancel();
           _numLoadAttempts++;
           _appOpenAd = null;
 
@@ -89,8 +97,6 @@ class AppOpenAdController implements AdController {
                 onAdLoaded: onAdLoaded,
                 onAdFailedToLoad: onAdFailedToLoad); // Thử lại
           } else {
-            _loadingCompleter?.completeError(error);
-            _loadingCompleter = null;
             onAdFailedToLoad?.call();
           }
         },
@@ -135,6 +141,9 @@ class AppOpenAdController implements AdController {
         ad.dispose();
         _appOpenAd = null;
         MexaAds.instance.lastestTimeShowAOAAd = DateTime.now();
+        if (reloadAfterShow) {
+          _loadAdAppOpen();
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         onAdFailedToShow?.call();
@@ -153,9 +162,7 @@ class AppOpenAdController implements AdController {
       },
       onAdImpression: (ad) {
         _showAOAPlaceHolder(context);
-        if (reloadAfterShow) {
-          _loadAdAppOpen();
-        }
+
         onAdDisplay?.call();
       },
     );

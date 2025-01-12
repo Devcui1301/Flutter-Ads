@@ -26,10 +26,10 @@ class InterstitialAdController implements AdController {
   Future<bool> loadAd(
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
     // Nếu đang load, đợi quá trình load hoàn tất
-    if (_loadingCompleter != null && !_loadingCompleter!.isCompleted) {
+    if (_loadingCompleter != null && _loadingCompleter?.isCompleted == false) {
       log("Đang load quảng cáo, chờ hoàn tất");
       try {
-        await _loadingCompleter!.future;
+        await _loadingCompleter?.future;
         return true; // Load thành công
       } catch (e) {
         onAdFailedToLoad?.call(); // Gọi callback khi thất bại
@@ -46,44 +46,54 @@ class InterstitialAdController implements AdController {
     // Khởi tạo quá trình load quảng cáo
     _loadingCompleter = Completer<void>();
     _numLoadAttempts = 0;
-
-    // Bắt đầu load quảng cáo
-    _loadAdInternal(onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailedToLoad);
-    // Chờ quá trình load hoàn tất
-    try {
-      await _loadingCompleter!.future;
-      return true; // Load thành công
-    } catch (e) {
-      onAdFailedToLoad?.call(); // Gọi callback khi thất bại
-      return false; // Load thất bại
-    }
-  }
-
-  void _loadAdInternal(
-      {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) {
     Timer timeoutTimer = Timer(MexaAds.instance.adConstant.timeoutLoadAd, () {
-      if (!_loadingCompleter!.isCompleted) {
+      if (_loadingCompleter?.isCompleted == false) {
         _loadingCompleter?.completeError("Ad load timeout");
         _loadingCompleter = null;
         _interstitialAd = null;
         onAdFailedToLoad?.call();
       }
     });
+    // Bắt đầu load quảng cáo
+    _loadAdInternal(
+      onAdLoaded: () {
+        _loadingCompleter?.complete();
+        _loadingCompleter = null;
+        timeoutTimer.cancel();
+        onAdLoaded?.call();
+      },
+      onAdFailedToLoad: () {
+        _loadingCompleter?.completeError("Ad load failed");
+        _loadingCompleter = null;
+        timeoutTimer.cancel();
+        onAdFailedToLoad?.call();
+      },
+    );
+    // Chờ quá trình load hoàn tất
+    try {
+      await _loadingCompleter?.future;
+      return true; // Load thành công
+    } catch (e) {
+      onAdFailedToLoad?.call(); // Gọi callback khi thất bại
+      return false; // Load thất bại
+    } finally {
+      timeoutTimer.cancel();
+    }
+  }
+
+  void _loadAdInternal(
+      {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) {
     InterstitialAd.load(
       adUnitId: _adId,
       request: _request,
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
-          timeoutTimer.cancel();
           _interstitialAd = ad;
           _numLoadAttempts = 0;
-          _interstitialAd!.setImmersiveMode(true);
-          _loadingCompleter?.complete();
-          _loadingCompleter = null;
+          _interstitialAd?.setImmersiveMode(true);
           onAdLoaded?.call();
         },
         onAdFailedToLoad: (error) {
-          timeoutTimer.cancel();
           _numLoadAttempts++;
           _interstitialAd = null;
 
@@ -92,8 +102,6 @@ class InterstitialAdController implements AdController {
                 onAdLoaded: onAdLoaded,
                 onAdFailedToLoad: onAdFailedToLoad); // Thử lại
           } else {
-            _loadingCompleter?.completeError(error);
-            _loadingCompleter = null;
             onAdFailedToLoad?.call();
           }
         },
@@ -130,13 +138,16 @@ class InterstitialAdController implements AdController {
       MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
       MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
     };
-    _interstitialAd!.fullScreenContentCallback =
+    _interstitialAd?.fullScreenContentCallback =
         FullScreenContentCallback<InterstitialAd>(
       onAdDismissedFullScreenContent: (ad) {
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _interstitialAd = null; // Reset sau khi hiển thị
         MexaAds.instance.lastestTimeShowInterstitialAd = DateTime.now();
+        if (reloadAfterShow) {
+          _loadAdInternal();
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         onAdFailedToShow?.call();
@@ -154,14 +165,11 @@ class InterstitialAdController implements AdController {
         ));
       },
       onAdImpression: (ad) {
-        if (reloadAfterShow) {
-          _loadAdInternal();
-        }
         onAdDisplay?.call();
       },
     );
 
-    _interstitialAd!.show();
+    _interstitialAd?.show();
   }
 
   @override

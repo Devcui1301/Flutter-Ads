@@ -14,7 +14,7 @@ class RewardedAdScreen extends StatelessWidget {
         onPressed: () {
           MexaAds.instance.loadAndShowRewardAd(
             context: context,
-            placement: "reward_1",
+            placement: "rewarded_1",
             onAdLoaded: () {
               log("Reward: onAdLoaded");
             },

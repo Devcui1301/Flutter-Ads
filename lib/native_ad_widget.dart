@@ -306,13 +306,13 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
 
     // Kiểm tra nếu completer tồn tại và chưa hoàn thành
     if (manager.loadingNativeCompleters[widget.placement] != null) {
-      Completer<void> completer =
-          manager.loadingNativeCompleters[widget.placement]!;
+      Completer<void>? completer =
+          manager.loadingNativeCompleters[widget.placement];
 
-      if (!completer.isCompleted) {
+      if (completer?.isCompleted == false) {
         logger("Native: Chờ cho việc tải hoàn thành");
         // Chờ cho việc tải hoàn thành
-        completer.future.then((_) async {
+        completer?.future.then((_) async {
           await Future.delayed(const Duration(milliseconds: 200));
 
           if (mounted) {

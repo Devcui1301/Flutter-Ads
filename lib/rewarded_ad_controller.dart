@@ -27,10 +27,10 @@ class RewardedAdController implements AdController {
   Future<bool> loadAd(
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
     // Nếu đang load, đợi quá trình load hoàn tất
-    if (_loadingCompleter != null && !_loadingCompleter!.isCompleted) {
+    if (_loadingCompleter != null && _loadingCompleter?.isCompleted == false) {
       log("Đang load quảng cáo, chờ hoàn tất");
       try {
-        await _loadingCompleter!.future;
+        await _loadingCompleter?.future;
         return true; // Load thành công
       } catch (e) {
         onAdFailedToLoad?.call(); // Gọi callback khi thất bại
@@ -47,44 +47,54 @@ class RewardedAdController implements AdController {
     // Khởi tạo quá trình load quảng cáo
     _loadingCompleter = Completer<void>();
     _numLoadAttempts = 0;
-
-    // Bắt đầu load quảng cáo
-    _loadAdReward(onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailedToLoad);
-    // Chờ quá trình load hoàn tất
-    try {
-      await _loadingCompleter!.future;
-      return true; // Load thành công
-    } catch (e) {
-      onAdFailedToLoad?.call(); // Gọi callback khi thất bại
-      return false; // Load thất bại
-    }
-  }
-
-  void _loadAdReward(
-      {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) {
     Timer timeoutTimer = Timer(MexaAds.instance.adConstant.timeoutLoadAd, () {
-      if (!_loadingCompleter!.isCompleted) {
+      if (_loadingCompleter?.isCompleted == false) {
         _loadingCompleter?.completeError("Ad load timeout");
         _loadingCompleter = null;
         _rewardedAd = null;
         onAdFailedToLoad?.call();
       }
     });
+    // Bắt đầu load quảng cáo
+    _loadAdReward(
+      onAdLoaded: () {
+        _loadingCompleter?.complete();
+        _loadingCompleter = null;
+        timeoutTimer.cancel();
+        onAdLoaded?.call();
+      },
+      onAdFailedToLoad: () {
+        _loadingCompleter?.completeError("Ad load failed");
+        _loadingCompleter = null;
+        timeoutTimer.cancel();
+        onAdFailedToLoad?.call();
+      },
+    );
+    // Chờ quá trình load hoàn tất
+    try {
+      await _loadingCompleter?.future;
+      return true; // Load thành công
+    } catch (e) {
+      onAdFailedToLoad?.call(); // Gọi callback khi thất bại
+      return false; // Load thất bại
+    } finally {
+      timeoutTimer.cancel();
+    }
+  }
+
+  void _loadAdReward(
+      {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
     RewardedAd.load(
       adUnitId: _adId,
       request: _request,
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          timeoutTimer.cancel();
           _rewardedAd = ad;
           _numLoadAttempts = 0;
-          _rewardedAd!.setImmersiveMode(true);
-          _loadingCompleter?.complete();
-          _loadingCompleter = null;
+          _rewardedAd?.setImmersiveMode(true);
           onAdLoaded?.call();
         },
         onAdFailedToLoad: (error) {
-          timeoutTimer.cancel();
           _numLoadAttempts++;
           _rewardedAd = null;
 
@@ -93,8 +103,6 @@ class RewardedAdController implements AdController {
                 onAdLoaded: onAdLoaded,
                 onAdFailedToLoad: onAdFailedToLoad); // Thử lại
           } else {
-            _loadingCompleter?.completeError(error);
-            _loadingCompleter = null;
             onAdFailedToLoad?.call();
           }
         },
@@ -131,12 +139,15 @@ class RewardedAdController implements AdController {
       MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
       MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
     };
-    _rewardedAd!.fullScreenContentCallback =
+    _rewardedAd?.fullScreenContentCallback =
         FullScreenContentCallback<RewardedAd>(
       onAdDismissedFullScreenContent: (ad) {
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _rewardedAd = null; // Reset sau khi hiển thị
+        if (reloadAfterShow) {
+          _loadAdReward();
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         onAdFailedToShow?.call();
@@ -154,14 +165,11 @@ class RewardedAdController implements AdController {
         ));
       },
       onAdImpression: (ad) {
-        if (reloadAfterShow) {
-          _loadAdReward();
-        }
         onAdDisplay?.call();
       },
     );
 
-    _rewardedAd!.show(
+    _rewardedAd?.show(
       onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {},
     );
   }
