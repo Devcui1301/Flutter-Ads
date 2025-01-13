@@ -1,59 +1,103 @@
-import 'package:flutter/widgets.dart';
+import 'dart:async';
+import 'dart:developer';
+import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
 import 'package:mexa_ads/mexa_ads.dart';
-import 'package:mexa_ads/utils.dart';
 import 'package:mexa_ads/widget/aoa_place_holder.dart';
-import 'package:mexa_ads/widget/loading_dialog.dart';
-import 'dart:async';
 
 class AppOpenAdController implements AdController {
-  final _request = const AdRequest();
+  final AdRequest _request = const AdRequest();
   AppOpenAd? _appOpenAd;
-  int _numAOALoadAttempts = 0;
-  static const int maxFailedLoadAttempts = 5;
-  // the offet time after the last ad was showed
-  DateTime showAdsDateTime = DateTime.now();
+  Completer<void>? _loadingCompleter;
+  int _numLoadAttempts = 0;
+  static const int maxLoadAttempts = 5;
 
   late String _adId;
-  void setAdId(String id) {
-    _adId = id;
-  }
-
   late String _adPlacement;
-  void setAdPlacement(String placement) {
-    _adPlacement = placement;
+
+  void setAdId(String id) => _adId = id;
+
+  void setAdPlacement(String placement) => _adPlacement = placement;
+
+  @override
+  Future<bool> loadAd(
+      {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
+    // Nếu đang load, chờ hoàn thành
+    if (_loadingCompleter != null && _loadingCompleter?.isCompleted == false) {
+      try {
+        await _loadingCompleter?.future;
+        return true; // Load thành công
+      } catch (_) {
+        onAdFailedToLoad?.call();
+        return false; // Load thất bại
+      }
+    }
+
+    // Nếu đã có quảng cáo sẵn sàng
+    if (_appOpenAd != null) {
+      log("Quảng cáo đã sẵn sàng, không cần load lại");
+      return true;
+    }
+
+    // Bắt đầu load quảng cáo
+    _loadingCompleter = Completer<void>();
+    _numLoadAttempts = 0;
+    Timer timeoutTimer = Timer(MexaAds.instance.adConstant.timeoutLoadAd, () {
+      if (_loadingCompleter?.isCompleted == false) {
+        _loadingCompleter?.completeError("Ad load timeout");
+        _loadingCompleter = null;
+        _appOpenAd = null;
+        onAdFailedToLoad?.call();
+      }
+    });
+    // Bắt đầu load quảng cáo
+    _loadAdAppOpen(
+      onAdLoaded: () {
+        _loadingCompleter?.complete();
+        _loadingCompleter = null;
+        timeoutTimer.cancel();
+        onAdLoaded?.call();
+      },
+      onAdFailedToLoad: () {
+        _loadingCompleter?.completeError("Ad load failed");
+        _loadingCompleter = null;
+        timeoutTimer.cancel();
+        onAdFailedToLoad?.call();
+      },
+    );
+    // Chờ quá trình load hoàn tất
+    try {
+      await _loadingCompleter?.future;
+      return true; // Load thành công
+    } catch (e) {
+      onAdFailedToLoad?.call(); // Gọi callback khi thất bại
+      return false; // Load thất bại
+    }
   }
 
-  Timer? _loadingTimer;
-  @override
-  Future<void> loadAd({
-    VoidCallback? onAdLoaded,
-    VoidCallback? onAdFailedToLoad,
-  }) async {
-    await AppOpenAd.load(
+  void _loadAdAppOpen(
+      {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) {
+    AppOpenAd.load(
       adUnitId: _adId,
       request: _request,
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
           _appOpenAd = ad;
-          _numAOALoadAttempts = 0;
-          _appOpenAd!.setImmersiveMode(true);
+          _numLoadAttempts = 0;
+          _appOpenAd?.setImmersiveMode(true);
           onAdLoaded?.call();
-          logger('AOA onAdLoaded');
         },
         onAdFailedToLoad: (error) {
-          _numAOALoadAttempts++;
+          _numLoadAttempts++;
           _appOpenAd = null;
-          if (_numAOALoadAttempts < maxFailedLoadAttempts) {
-            loadAd(
-              onAdLoaded: onAdLoaded,
-              onAdFailedToLoad: onAdFailedToLoad,
-            );
+
+          if (_numLoadAttempts < maxLoadAttempts) {
+            _loadAdAppOpen(
+                onAdLoaded: onAdLoaded,
+                onAdFailedToLoad: onAdFailedToLoad); // Thử lại
           } else {
-            _numAOALoadAttempts = 0;
             onAdFailedToLoad?.call();
-            logger('AOA Load ad error code: ${error.code} -> ${error.message}');
           }
         },
       ),
@@ -61,92 +105,24 @@ class AppOpenAdController implements AdController {
   }
 
   @override
-  Future<void> showAd(
-      {BuildContext? context,
-      Function(bool canShowAd)? onStartLoading,
-      VoidCallback? onAdDismissedFullScreenContent,
-      VoidCallback? onAdLoaded,
-      VoidCallback? onAdDisplay,
-      VoidCallback? onAdClicked,
-      String? placement,
-      VoidCallback? onAdFailedToLoad,
-      bool forceShow = false,
-      bool showLoading = true,
-      bool autoReloadAdAfterShow = true}) async {
-    if (!forceShow &&
-            showAdsDateTime
-                    .add(MexaAds.instance.adConstant.appOpenOffsetTime)
-                    .compareTo(DateTime.now()) >
-                0 ||
-        MexaAds.instance.isAdDisable) {
-      onStartLoading?.call(false);
+  Future<void> showAd({
+    BuildContext? context,
+    VoidCallback? onAdDismissedFullScreenContent,
+    VoidCallback? onAdFailedToShow,
+    VoidCallback? onAdDisplay,
+    VoidCallback? onAdClicked,
+    bool reloadAfterShow = true,
+  }) async {
+    // Nếu quảng cáo chưa được load, return luôn
+    if (_appOpenAd == null) {
+      onAdFailedToShow?.call();
       return;
     }
-    onStartLoading?.call(true);
 
-    // init fullscreen callback object
-    final fullScreenContentCallback = FullScreenContentCallback<AppOpenAd>(
-      onAdDismissedFullScreenContent: (AppOpenAd ad) {
-        showAdsDateTime = DateTime.now();
-        _hideAOAPlaceHolder(context);
-        onAdDismissedFullScreenContent?.call();
-        ad.dispose();
-      },
-      onAdFailedToShowFullScreenContent: (AppOpenAd ad, AdError error) {
-        _hideLoadingOverlay(context, showLoading);
-        _appOpenAd = null;
-        ad.dispose();
-        if (autoReloadAdAfterShow) {
-          loadAd();
-        }
-        onStartLoading?.call(false);
-      },
-      onAdClicked: (ad) {
-        onAdClicked?.call();
-        MexaAds.instance.adClickedListener?.call(AdClickedParams(
-          networkName:
-              ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-          adUnitId: ad.adUnitId,
-          adType: AdType.appOpen.value,
-          placement: placement ?? '',
-        ));
-      },
-      onAdImpression: (ad) {
-        _hideLoadingOverlay(context, showLoading);
-        _showAOAPlaceHolder(context);
-        if (autoReloadAdAfterShow) {
-          loadAd();
-        }
-        onAdDisplay?.call();
-      },
-    );
-
-    if (_appOpenAd == null) {
-      _showLoadingOverlay(context, showLoading, onAdFailedToLoad);
-      await loadAd(
-        onAdLoaded: () {
-          onAdLoaded?.call();
-          _setAdListener(fullScreenContentCallback);
-          _showAd(isShowImmediately: false);
-        },
-        onAdFailedToLoad: () {
-          _hideLoadingOverlay(context, showLoading);
-          onAdFailedToLoad?.call();
-        },
-      );
-    } else {
-      logger('AOA ad != null');
-      _showLoadingOverlay(context, showLoading, onAdFailedToLoad);
-      _setAdListener(fullScreenContentCallback);
-      _showAd(isShowImmediately: true);
-    }
-  }
-
-  void _setAdListener(FullScreenContentCallback<AppOpenAd> callback) {
     _appOpenAd?.onPaidEvent = (ad, valueMicros, precision, currencyCode) {
       final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
         networkName:
-            ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? "",
+            ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
         revenue: valueMicros / 1000000.0,
         adUnitId: ad.adUnitId,
         adType: AdType.appOpen.value,
@@ -156,45 +132,41 @@ class AppOpenAdController implements AdController {
       MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
       MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
     };
-    _appOpenAd!.fullScreenContentCallback = callback;
-  }
 
-  void _showAd({bool isShowImmediately = true}) {
-    if (MexaAds.instance.isShownAOAPending) {
-      Future.delayed(
-        Duration(milliseconds: isShowImmediately ? 0 : 1500),
-        () {
-          _appOpenAd!.show();
-          _appOpenAd = null;
-        },
-      );
-    }
-  }
+    _appOpenAd?.fullScreenContentCallback =
+        FullScreenContentCallback<AppOpenAd>(
+      onAdDismissedFullScreenContent: (ad) {
+        _hideAOAPlaceHolder(context);
+        onAdDismissedFullScreenContent?.call();
+        ad.dispose();
+        _appOpenAd = null;
+        MexaAds.instance.lastestTimeShowAOAAd = DateTime.now();
+        if (reloadAfterShow) {
+          loadAd();
+        }
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        onAdFailedToShow?.call();
+        ad.dispose();
+        _appOpenAd = null;
+      },
+      onAdClicked: (ad) {
+        onAdClicked?.call();
+        MexaAds.instance.adClickedListener?.call(AdClickedParams(
+          networkName:
+              ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
+          adUnitId: _adId,
+          adType: AdType.appOpen.value,
+          placement: _adPlacement,
+        ));
+      },
+      onAdImpression: (ad) {
+        _showAOAPlaceHolder(context);
 
-  void _showLoadingOverlay(
-      BuildContext? context, bool showLoading, VoidCallback? onAdFailedToLoad) {
-    MexaAds.instance.isShownAOAPending = true;
-    _loadingTimer ??= Timer(MexaAds.instance.adConstant.timeoutLoadAd, () {
-      logger('AOA: Loading timeout -> hide loading and call onAdFailedToLoad');
-      _hideLoadingOverlay(context, showLoading);
-      onAdFailedToLoad?.call();
-    });
-    if (!showLoading) return;
-    if (context != null && context.mounted) {
-      Navigator.of(context).push(LoadingOverlay());
-    }
-  }
-
-  void _hideLoadingOverlay(BuildContext? context, bool showLoading) {
-    if (MexaAds.instance.isShownAOAPending) {
-      MexaAds.instance.isShownAOAPending = false;
-      _loadingTimer?.cancel(); // Cancel the Timer
-      _loadingTimer = null; // Reset Timer
-      if (!showLoading) return;
-      if (context != null && context.mounted) {
-        Navigator.of(context).pop();
-      }
-    }
+        onAdDisplay?.call();
+      },
+    );
+    _appOpenAd?.show();
   }
 
   void _showAOAPlaceHolder(BuildContext? context) {
@@ -205,7 +177,9 @@ class AppOpenAdController implements AdController {
 
   void _hideAOAPlaceHolder(BuildContext? context) {
     if (context != null && context.mounted) {
-      Navigator.of(context).pop();
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
