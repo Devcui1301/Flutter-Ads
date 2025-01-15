@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:adjust_sdk/adjust.dart';
@@ -12,6 +13,7 @@ import 'package:mexa_ads/app_open_ad_controller.dart';
 import 'package:mexa_ads/inters_ad_controller.dart';
 import 'package:mexa_ads/rewarded_ad_controller.dart';
 import 'package:mexa_ads/utils.dart';
+import 'package:mexa_ads/widget/loading_dialog.dart';
 
 typedef RevenuePaidedListener = Function(AdRevenuePaidParams params)?;
 typedef AdClickedListener = Function(AdClickedParams params)?;
@@ -25,20 +27,8 @@ class MexaAds {
   late final AdConstant _adConstant;
   AdConstant get adConstant => _adConstant;
 
-  DateTime lastestShowIntersDateTime = DateTime.now();
-
-  DateTime _lastestTimeShowInterstitialAd = DateTime.now();
-  DateTime _lastestTimeShowRewardAd = DateTime.now();
-  DateTime _lastestTimeShowAOAAd = DateTime.now();
-  bool _isFirstShowAOA = true;
-  bool _isFirstShowInters = true;
-  bool _isFirstShowRewared = true;
-
   bool isAdDisable = false;
   bool loadAdAfterInitializing = true;
-  bool isShownAOAPending = false;
-  bool isShownIntersPending = false;
-  bool isShownRewardedPending = false;
   Widget? loadingAdWidget;
 
   // native ad decoration
@@ -52,6 +42,9 @@ class MexaAds {
   late final Map<String, AdController> _intersAdController = {};
   late final Map<String, AdController> _appOpenAdController = {};
   late final Map<String, AdController> _rewardedAdController = {};
+
+  DateTime lastestTimeShowInterstitialAd = DateTime.now();
+  DateTime lastestTimeShowAOAAd = DateTime.now();
 
   //call AdmobAds.instance.openAdInspector();
   void openAdInspector() {
@@ -155,169 +148,251 @@ class MexaAds {
     Adjust.initSdk(config);
   }
 
-  void showInterstitialAd(
-      {required BuildContext context,
-      required String? placement,
-      Function(bool canShowAd)? onStartLoading,
-      Function()? onAdDismissedFullScreenContent,
-      VoidCallback? onAdClicked,
-      VoidCallback? onAdLoaded,
-      VoidCallback? onAdDisplayed,
-      VoidCallback? onAdFailToLoad,
-      bool forceShow = false,
-      bool showLoading = true,
-      bool autoReloadAdAfterShow = true}) {
-    placement ??= adConstant.interstitialId.keys.first;
-    logger('show with placement: $placement ${_intersAdController[placement]}');
-    if (_isFirstShowAOA == false ||
-        _isFirstShowInters == false ||
-        _isFirstShowRewared == false) {
-      logger(
-          'inters time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowInterstitialAd.millisecondsSinceEpoch}');
-      logger(
-          'RV time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowRewardAd.millisecondsSinceEpoch}');
-      logger(
-          'AOA time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowAOAAd.millisecondsSinceEpoch}');
-      if (DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowInterstitialAd.millisecondsSinceEpoch <
-              2000 ||
-          DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowRewardAd.millisecondsSinceEpoch <
-              2000 ||
-          DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowAOAAd.millisecondsSinceEpoch <
-              2000) {
-        onStartLoading?.call(false);
-        return;
-      }
+  Future<bool> loadInterAd({
+    required String placement,
+    VoidCallback? onAdLoaded,
+    VoidCallback? onAdFailToLoad,
+  }) async {
+    if (isAdDisable) return false;
+    return await _intersAdController[placement]?.loadAd(
+            onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailToLoad) ??
+        false;
+  }
+
+  void showInterAd({
+    required String placement,
+    Function()? onAdDismissedFullScreenContent,
+    Function()? onAdClicked,
+    Function()? onAdDisplay,
+    Function()? onAdFailedToShow,
+    Function()? onShowInOffsetTime,
+    bool reloadAfterShow = true,
+    bool forceShow = true,
+  }) {
+    if (!forceShow &&
+            MexaAds.instance.lastestTimeShowInterstitialAd
+                    .add(MexaAds.instance.adConstant.interstitialOffsetTime)
+                    .compareTo(DateTime.now()) >
+                0 ||
+        isAdDisable) {
+      onShowInOffsetTime?.call();
+      return;
     }
     _intersAdController[placement]?.showAd(
-        context: context,
-        forceShow: forceShow,
-        showLoading: showLoading,
-        onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
-        onAdClicked: () => onAdClicked?.call(),
-        onAdDismissedFullScreenContent: () {
-          _lastestTimeShowInterstitialAd = DateTime.now();
-          onAdDismissedFullScreenContent?.call();
-          _isFirstShowInters = false;
-        },
-        onAdLoaded: () => onAdLoaded?.call(),
-        onAdFailedToLoad: () => onAdFailToLoad?.call(),
-        onAdDisplay: () => onAdDisplayed?.call(),
-        autoReloadAdAfterShow: autoReloadAdAfterShow);
+      onAdClicked: onAdClicked,
+      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+      onAdDisplay: onAdDisplay,
+      onAdFailedToShow: onAdFailedToShow,
+      reloadAfterShow: reloadAfterShow,
+    );
   }
 
-  void showAppOpenAd(
-      {required BuildContext context,
-      required String? placement,
-      Function(bool canShowAd)? onStartLoading,
-      VoidCallback? onAdDismissedFullScreenContent,
-      VoidCallback? onAdClicked,
-      VoidCallback? onAdLoaded,
-      VoidCallback? onAdDisplayed,
-      VoidCallback? onAdFailToLoad,
-      bool forceShow = true,
-      bool showLoading = true,
-      bool autoReloadAdAfterShow = true}) {
-    placement ??= adConstant.appOpenId.keys.first;
-    logger(
-        'show AOA with placement: $placement ${_appOpenAdController[placement]}');
-
-    if (_isFirstShowAOA == false ||
-        _isFirstShowInters == false ||
-        _isFirstShowRewared == false) {
-      logger(
-          'inters time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowInterstitialAd.millisecondsSinceEpoch}');
-      logger(
-          'RV time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowRewardAd.millisecondsSinceEpoch}');
-      logger(
-          'AOA time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowAOAAd.millisecondsSinceEpoch}');
-      if (DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowInterstitialAd.millisecondsSinceEpoch <
-              2000 ||
-          DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowRewardAd.millisecondsSinceEpoch <
-              2000 ||
-          DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowAOAAd.millisecondsSinceEpoch <
-              2000) {
-        onStartLoading?.call(false);
-        return;
+  void loadAndShowInterAd({
+    required String placement,
+    required BuildContext context,
+    VoidCallback? onAdLoaded,
+    VoidCallback? onAdFailToLoad,
+    Function()? onAdDismissedFullScreenContent,
+    Function()? onAdClicked,
+    Function()? onAdDisplay,
+    Function()? onAdFailedToShow,
+    bool showLoading = true,
+    Function()? onShowInOffsetTime,
+    bool reloadAfterShow = true,
+    bool forceShow = true,
+    Route? customLoadingOverlay,
+  }) async {
+    if (!forceShow &&
+            MexaAds.instance.lastestTimeShowInterstitialAd
+                    .add(MexaAds.instance.adConstant.interstitialOffsetTime)
+                    .compareTo(DateTime.now()) >
+                0 ||
+        isAdDisable) {
+      onShowInOffsetTime?.call();
+      return;
+    }
+    if (showLoading && context.mounted) {
+      Navigator.of(context).push(customLoadingOverlay ?? LoadingOverlay());
+    }
+    await loadInterAd(
+        placement: placement,
+        onAdLoaded: onAdLoaded,
+        onAdFailToLoad: onAdLoaded);
+    if (showLoading && context.mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!context.mounted) return;
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
       }
     }
+    if (!context.mounted) return;
+    showInterAd(
+        placement: placement,
+        onAdClicked: onAdClicked,
+        onAdDisplay: onAdDisplay,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow,
+        forceShow: forceShow,
+        onShowInOffsetTime: onShowInOffsetTime);
+  }
 
+  Future<bool> loadAppOpenAd({
+    required String placement,
+    VoidCallback? onAdLoaded,
+    VoidCallback? onAdFailToLoad,
+  }) async {
+    if (isAdDisable) return false;
+    return await _appOpenAdController[placement]?.loadAd(
+            onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailToLoad) ??
+        false;
+  }
+
+  void showAppOpenAd({
+    required String placement,
+    required BuildContext context,
+    Function()? onAdDismissedFullScreenContent,
+    Function()? onAdClicked,
+    Function()? onAdDisplay,
+    Function()? onAdFailedToShow,
+    bool reloadAfterShow = true,
+    Function()? onShowInOffsetTime,
+    bool forceShow = true,
+  }) {
+    if (!forceShow &&
+            MexaAds.instance.lastestTimeShowAOAAd
+                    .add(MexaAds.instance.adConstant.appOpenOffsetTime)
+                    .compareTo(DateTime.now()) >
+                0 ||
+        isAdDisable) {
+      onShowInOffsetTime?.call();
+      return;
+    }
     _appOpenAdController[placement]?.showAd(
-        context: context,
-        forceShow: forceShow,
-        onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
-        onAdClicked: () => onAdClicked?.call(),
-        onAdLoaded: () => onAdLoaded?.call(),
-        onAdDismissedFullScreenContent: () {
-          _lastestTimeShowAOAAd = DateTime.now();
-          onAdDismissedFullScreenContent?.call();
-          _isFirstShowAOA = false;
-        },
-        onAdFailedToLoad: () => onAdFailToLoad?.call(),
-        onAdDisplay: () => onAdDisplayed?.call(),
-        showLoading: showLoading,
-        placement: placement,
-        autoReloadAdAfterShow: autoReloadAdAfterShow);
+      onAdClicked: onAdClicked,
+      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+      onAdDisplay: onAdDisplay,
+      onAdFailedToShow: onAdFailedToShow,
+      reloadAfterShow: true,
+      context: context,
+    );
   }
 
-  void showRewardedAd(
-      {required BuildContext context,
-      required String? placement,
-      Function(bool canShowAd)? onStartLoading,
-      VoidCallback? onAdDismissedFullScreenContent,
-      VoidCallback? onAdClicked,
+  void loadAndShowAppOpenAd(
+      {required String placement,
+      required BuildContext context,
       VoidCallback? onAdLoaded,
-      VoidCallback? onAdDisplayed,
       VoidCallback? onAdFailToLoad,
+      Function()? onAdDismissedFullScreenContent,
+      Function()? onAdClicked,
+      Function()? onAdDisplay,
+      Function()? onAdFailedToShow,
       bool showLoading = true,
+      bool reloadAfterShow = true,
+      Function()? onShowInOffsetTime,
       bool forceShow = true,
-      bool autoReloadAdAfterShow = true}) {
-    placement ??= adConstant.rewardedAdId.keys.first;
-    logger(
-        'show with placement: $placement ${_rewardedAdController[placement]}');
-    if (_isFirstShowAOA == false ||
-        _isFirstShowInters == false ||
-        _isFirstShowRewared == false) {
-      logger(
-          'inters time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowInterstitialAd.millisecondsSinceEpoch}');
-      logger(
-          'RV time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowRewardAd.millisecondsSinceEpoch}');
-      logger(
-          'AOA time: ${DateTime.now().millisecondsSinceEpoch - _lastestTimeShowAOAAd.millisecondsSinceEpoch}');
-      if (DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowInterstitialAd.millisecondsSinceEpoch <
-              2000 ||
-          DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowRewardAd.millisecondsSinceEpoch <
-              2000 ||
-          DateTime.now().millisecondsSinceEpoch -
-                  _lastestTimeShowAOAAd.millisecondsSinceEpoch <
-              2000) {
-        onStartLoading?.call(false);
-        return;
+      Route? customLoadingOverlay}) async {
+    if (!forceShow &&
+            MexaAds.instance.lastestTimeShowAOAAd
+                    .add(MexaAds.instance.adConstant.appOpenOffsetTime)
+                    .compareTo(DateTime.now()) >
+                0 ||
+        isAdDisable) {
+      onShowInOffsetTime?.call();
+      return;
+    }
+
+    if (showLoading && context.mounted) {
+      Navigator.of(context).push(customLoadingOverlay ?? LoadingOverlay());
+    }
+    await loadAppOpenAd(
+        placement: placement,
+        onAdLoaded: onAdLoaded,
+        onAdFailToLoad: onAdLoaded);
+    if (showLoading && context.mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!context.mounted) return;
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
       }
     }
+    if (!context.mounted) return;
+    showAppOpenAd(
+      placement: placement,
+      onAdClicked: onAdClicked,
+      context: context,
+      onAdDisplay: onAdDisplay,
+      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+      onAdFailedToShow: onAdFailedToShow,
+      reloadAfterShow: reloadAfterShow,
+    );
+  }
+
+  Future<bool> loadRewardAd({
+    required String placement,
+    VoidCallback? onAdLoaded,
+    VoidCallback? onAdFailToLoad,
+  }) async {
+    if (isAdDisable) return false;
+    return await _rewardedAdController[placement]?.loadAd(
+            onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailToLoad) ??
+        false;
+  }
+
+  void showRewardAd({
+    required String placement,
+    Function()? onAdDismissedFullScreenContent,
+    Function()? onAdClicked,
+    Function()? onAdDisplay,
+    Function()? onAdFailedToShow,
+    bool reloadAfterShow = true,
+  }) {
+    if (isAdDisable) return;
+
     _rewardedAdController[placement]?.showAd(
-        context: context,
-        forceShow: forceShow,
-        onStartLoading: (canShowAd) => onStartLoading?.call(canShowAd),
-        onAdClicked: () => onAdClicked?.call(),
-        onAdLoaded: () => onAdLoaded?.call(),
-        onAdDismissedFullScreenContent: () {
-          _lastestTimeShowRewardAd = DateTime.now();
-          onAdDismissedFullScreenContent?.call();
-          _isFirstShowRewared = false;
-        },
-        onAdFailedToLoad: () => onAdFailToLoad?.call(),
-        onAdDisplay: () => onAdDisplayed?.call(),
+        onAdClicked: onAdClicked,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdDisplay: onAdDisplay,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow);
+  }
+
+  void loadAndShowRewardAd(
+      {required String placement,
+      required BuildContext context,
+      VoidCallback? onAdLoaded,
+      VoidCallback? onAdFailToLoad,
+      Function()? onAdDismissedFullScreenContent,
+      Function()? onAdClicked,
+      Function()? onAdDisplay,
+      Function()? onAdFailedToShow,
+      bool showLoading = true,
+      bool reloadAfterShow = true,
+      Route? customLoadingOverlay}) async {
+    if (isAdDisable) return;
+
+    if (showLoading && context.mounted) {
+      Navigator.of(context).push(customLoadingOverlay ?? LoadingOverlay());
+    }
+    await loadRewardAd(
         placement: placement,
-        showLoading: showLoading,
-        autoReloadAdAfterShow: autoReloadAdAfterShow);
+        onAdLoaded: onAdLoaded,
+        onAdFailToLoad: onAdLoaded);
+    if (showLoading && context.mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!context.mounted) return;
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+    }
+    if (!context.mounted) return;
+    showRewardAd(
+        placement: placement,
+        onAdClicked: onAdClicked,
+        onAdDisplay: onAdDisplay,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow);
   }
 
   void dispose() {
@@ -517,7 +592,10 @@ class AdClickedParams {
 class NativeAdManager {
   Map<String, NativeAd?> nativeAds = <String, NativeAd?>{};
 
-  Map<String, bool> isAdLoadeds = <String, bool>{};
+  // Map<String, bool> isAdLoadeds = <String, bool>{};
+
+  Map<String, Completer<void>?> loadingNativeCompleters =
+      <String, Completer<void>?>{};
 
   NativeAdManager();
 
@@ -543,115 +621,133 @@ class NativeAdManager {
         String currencyCode,
         AdType adType,
       )? onRevenuePaid}) async {
-    nativeAds[placement] = NativeAd(
-      adUnitId: MexaAds.instance.adConstant.nativeId[placement] ?? '',
-      request: const AdRequest(),
-      nativeAdOptions: size == NativeAdSize.fullScreen
-          ? NativeAdOptions(
-              adChoicesPlacement: AdChoicesPlacement.topRightCorner,
-            )
-          : null,
-      customOptions: {
-        'bg_color': colorToHexString(
-            adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
-        'cta_bg_color': convertColorsToHex(
-            adCTABackgroundColor ?? MexaAds.instance.nativeCTABackgroundColor),
-        'cta_text_color': colorToHexString(
-            adCTATextColor ?? MexaAds.instance.nativeCTATitleStyle?.color),
-        'title_text_color': colorToHexString(
-            adTitleTextColor ?? MexaAds.instance.nativeTitleStyle?.color),
-        'body_text_color': colorToHexString(
-            adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
-        'ad_height': adHeight == null
-            ? size == NativeAdSize.layout1
-                ? MexaAds.instance.adConstant.nativeAdHeightLayout1.toInt()
-                : size == NativeAdSize.layout2
-                    ? MexaAds.instance.adConstant.nativeAdHeightLayout2.toInt()
-                    : size == NativeAdSize.layout3
-                        ? MexaAds.instance.adConstant.nativeAdHeightLayout3
-                            .toInt()
-                        : size == NativeAdSize.layout4
-                            ? MexaAds.instance.adConstant.nativeAdHeightLayout4
-                                .toInt()
-                            : size == NativeAdSize.noMedia
-                                ? MexaAds.instance.adConstant
-                                    .nativeAdHeightLayoutNoMedia
-                                    .toInt()
-                                : -1
-            : adHeight.toInt(),
-        'ad_banner_color':
-            colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
-        'gradient_orientation': gradientOrientationToString(
-            gradientOrientation ?? GradientOrientation.leftToRight),
-        'cta_border_radius': borderRadius
-      }..removeWhere((key, value) => value is String && value.isEmpty),
-      factoryId: size == NativeAdSize.layout1
-          ? 'nativeLayout1Factory'
-          : size == NativeAdSize.layout2
-              ? 'nativeLayout2Factory'
-              : size == NativeAdSize.layout3
-                  ? 'nativeLayout3Factory'
-                  : size == NativeAdSize.layout4
-                      ? 'nativeLayout4Factory'
-                      : size == NativeAdSize.noMedia
-                          ? 'nativeAdNoMediaFactory'
-                          : 'nativeAdFullScreenFactory',
-      listener: NativeAdListener(
-        onAdLoaded: (Ad ad) {
-          logger('NativeAd $placement loaded.');
-          isAdLoadeds[placement] = true;
-          onAdLoaded?.call();
-        },
-        onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          logger('NativeAd $placement failed to load: $error');
-          ad.dispose();
-          isAdLoadeds[placement] = false;
-          onAdFailedToLoad?.call();
-        },
-        onAdClosed: (Ad ad) {
-          logger('..............$NativeAd onAdClosed.');
-          onAdClosed?.call();
-        },
-        onAdClicked: (ad) {
-          MexaAds.instance.adClickedListener?.call(
-            AdClickedParams(
-              networkName:
-                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
-                      '',
-              adUnitId: ad.adUnitId,
-              adType: AdType.native.value,
-              placement: placement,
-            ),
-          );
-        },
-        onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-          logger(
-              '.............. NativeAd onPaidEvent ${'$valueMicros $precision'}');
-          onRevenuePaid?.call(
-            ad,
-            valueMicros,
-            precision,
-            currencyCode,
-            AdType.native,
-          );
-          MexaAds.instance.adRevenuePaidListener?.call(
-            AdRevenuePaidParams(
-              networkName:
-                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
-                      '',
-              revenue: valueMicros / 1000000.0,
-              adUnitId: ad.adUnitId,
-              adType: AdType.native.value,
-              placement: placement,
-              country: currencyCode,
-            ),
-          );
-        },
-      ),
-    )..load();
-  }
+    // Kiểm tra nếu đang load
+    if (loadingNativeCompleters[placement]?.isCompleted == false) {
+      await loadingNativeCompleters[placement]!.future;
+      return;
+    }
 
-  bool isAdLoaded(String placement) {
-    return isAdLoadeds[placement] ?? false;
+    // Khởi tạo Completer mới
+    final completer = Completer<void>();
+    loadingNativeCompleters[placement] = completer;
+
+    try {
+      nativeAds[placement] = NativeAd(
+        adUnitId: MexaAds.instance.adConstant.nativeId[placement] ?? '',
+        request: const AdRequest(),
+        nativeAdOptions: size == NativeAdSize.fullScreen
+            ? NativeAdOptions(
+                adChoicesPlacement: AdChoicesPlacement.topRightCorner,
+              )
+            : null,
+        customOptions: {
+          'bg_color': colorToHexString(
+              adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
+          'cta_bg_color': convertColorsToHex(adCTABackgroundColor ??
+              MexaAds.instance.nativeCTABackgroundColor),
+          'cta_text_color': colorToHexString(
+              adCTATextColor ?? MexaAds.instance.nativeCTATitleStyle?.color),
+          'title_text_color': colorToHexString(
+              adTitleTextColor ?? MexaAds.instance.nativeTitleStyle?.color),
+          'body_text_color': colorToHexString(
+              adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
+          'ad_height': adHeight == null
+              ? size == NativeAdSize.layout1
+                  ? MexaAds.instance.adConstant.nativeAdHeightLayout1.toInt()
+                  : size == NativeAdSize.layout2
+                      ? MexaAds.instance.adConstant.nativeAdHeightLayout2
+                          .toInt()
+                      : size == NativeAdSize.layout3
+                          ? MexaAds.instance.adConstant.nativeAdHeightLayout3
+                              .toInt()
+                          : size == NativeAdSize.layout4
+                              ? MexaAds
+                                  .instance.adConstant.nativeAdHeightLayout4
+                                  .toInt()
+                              : size == NativeAdSize.noMedia
+                                  ? MexaAds.instance.adConstant
+                                      .nativeAdHeightLayoutNoMedia
+                                      .toInt()
+                                  : size == NativeAdSize.noMedia2
+                                      ? MexaAds.instance.adConstant
+                                          .nativeAdHeightLayoutNoMedia2
+                                      : -1
+              : adHeight.toInt(),
+          'ad_banner_color':
+              colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
+          'gradient_orientation': gradientOrientationToString(
+              gradientOrientation ?? GradientOrientation.leftToRight),
+          'cta_border_radius': borderRadius
+        }..removeWhere((key, value) => value is String && value.isEmpty),
+        factoryId: size == NativeAdSize.layout1
+            ? 'nativeLayout1Factory'
+            : size == NativeAdSize.layout2
+                ? 'nativeLayout2Factory'
+                : size == NativeAdSize.layout3
+                    ? 'nativeLayout3Factory'
+                    : size == NativeAdSize.layout4
+                        ? 'nativeLayout4Factory'
+                        : size == NativeAdSize.noMedia
+                            ? 'nativeAdNoMediaFactory'
+                            : size == NativeAdSize.noMedia2
+                                ? 'nativeAdNoMedia2Factory'
+                                : 'nativeAdFullScreenFactory',
+        listener: NativeAdListener(
+          onAdLoaded: (Ad ad) {
+            logger('NativeAd $placement loaded.');
+            completer.complete();
+            onAdLoaded?.call();
+          },
+          onAdFailedToLoad: (Ad ad, LoadAdError error) {
+            logger('NativeAd $placement failed to load: $error');
+            ad.dispose();
+            completer.completeError(error);
+            onAdFailedToLoad?.call();
+          },
+          onAdClosed: (Ad ad) {
+            logger('..............$NativeAd onAdClosed.');
+            onAdClosed?.call();
+          },
+          onAdClicked: (ad) {
+            MexaAds.instance.adClickedListener?.call(
+              AdClickedParams(
+                networkName:
+                    ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                        '',
+                adUnitId: ad.adUnitId,
+                adType: AdType.native.value,
+                placement: placement,
+              ),
+            );
+          },
+          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+            logger(
+                '.............. NativeAd onPaidEvent ${'$valueMicros $precision'}');
+            onRevenuePaid?.call(
+              ad,
+              valueMicros,
+              precision,
+              currencyCode,
+              AdType.native,
+            );
+            MexaAds.instance.adRevenuePaidListener?.call(
+              AdRevenuePaidParams(
+                networkName:
+                    ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                        '',
+                revenue: valueMicros / 1000000.0,
+                adUnitId: ad.adUnitId,
+                adType: AdType.native.value,
+                placement: placement,
+                country: currencyCode,
+              ),
+            );
+          },
+        ),
+      )..load(); // Chờ hoàn tất
+      await completer.future;
+    } catch (e) {
+      logger('Error loading NativeAd $placement: $e');
+    }
   }
 }
