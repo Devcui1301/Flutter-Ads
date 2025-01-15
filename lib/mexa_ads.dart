@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:adjust_sdk/adjust.dart';
 import 'package:adjust_sdk/adjust_ad_revenue.dart';
 import 'package:adjust_sdk/adjust_config.dart';
+import 'package:adjust_sdk/adjust_event.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -73,9 +74,13 @@ class MexaAds {
           adRevenuePaidParams.revenue, adRevenuePaidParams.country);
       adRevenue.adRevenueNetwork = adRevenuePaidParams.networkName;
       adRevenue.adRevenuePlacement = adRevenuePaidParams.placement;
-
-      // Gửi thông tin đến Adjust
       Adjust.trackAdRevenue(adRevenue);
+
+      AdjustEvent adjustRevenueEvent =
+          AdjustEvent(_adConstant.adjustRevenueEventKey);
+      adjustRevenueEvent.setRevenue(
+          adRevenuePaidParams.revenue, adRevenuePaidParams.country);
+      Adjust.trackEvent(adjustRevenueEvent);
     } catch (e) {
       print(e.toString);
     }
@@ -392,6 +397,7 @@ class AdConstant {
   double nativeAdHeightLayout4;
   double nativeAdHeightLayoutNoMedia;
   double nativeAdHeightLayoutNoMedia2;
+  final String adjustRevenueEventKey;
 
   AdConstant({
     this.bannerAnchorId = const {},
@@ -410,6 +416,7 @@ class AdConstant {
     this.nativeAdHeightLayout4 = 160,
     this.nativeAdHeightLayoutNoMedia = 80,
     this.nativeAdHeightLayoutNoMedia2 = 140,
+    this.adjustRevenueEventKey = 'adjustEventKey',
   });
 }
 
@@ -576,7 +583,7 @@ class NativeAdManager {
             colorToHexString(adBannerColor ?? MexaAds.instance.primaryColor),
         'gradient_orientation': gradientOrientationToString(
             gradientOrientation ?? GradientOrientation.leftToRight),
-        'cta_border_radius': borderRadius ?? 12
+        'cta_border_radius': borderRadius
       }..removeWhere((key, value) => value is String && value.isEmpty),
       factoryId: size == NativeAdSize.layout1
           ? 'nativeLayout1Factory'
