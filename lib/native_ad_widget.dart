@@ -234,6 +234,14 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
               _nativeAdIsLoaded = true;
             });
           }
+          Future.delayed(
+            const Duration(milliseconds: 500),
+            () {
+              if (mounted) {
+                setState(() {});
+              }
+            },
+          );
 
           widget.onAdLoaded?.call();
         },
@@ -324,6 +332,14 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
           }
           manager.nativeAds.remove(widget.placement);
           manager.loadingNativeCompleters.remove(widget.placement);
+          Future.delayed(
+            const Duration(milliseconds: 500),
+            () {
+              if (mounted) {
+                setState(() {});
+              }
+            },
+          );
         }).catchError((error) async {
           await Future.delayed(const Duration(milliseconds: 200));
           logger("Native: Xử lý lỗi khi tải quảng cáo");
@@ -355,6 +371,14 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         }
         manager.nativeAds.remove(widget.placement);
         manager.loadingNativeCompleters.remove(widget.placement);
+        Future.delayed(
+          const Duration(milliseconds: 500),
+          () {
+            if (mounted) {
+              setState(() {});
+            }
+          },
+        );
       }
     } else {
       // Nếu không có completer, bắt đầu tải quảng cáo
