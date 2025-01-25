@@ -235,7 +235,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
             });
           }
           Future.delayed(
-            const Duration(milliseconds: 500),
+            const Duration(milliseconds: 700),
             () {
               if (mounted) {
                 setState(() {});
@@ -333,7 +333,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
           manager.nativeAds.remove(widget.placement);
           manager.loadingNativeCompleters.remove(widget.placement);
           Future.delayed(
-            const Duration(milliseconds: 500),
+            const Duration(milliseconds: 700),
             () {
               if (mounted) {
                 setState(() {});
@@ -372,7 +372,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         manager.nativeAds.remove(widget.placement);
         manager.loadingNativeCompleters.remove(widget.placement);
         Future.delayed(
-          const Duration(milliseconds: 500),
+          const Duration(milliseconds: 700),
           () {
             if (mounted) {
               setState(() {});

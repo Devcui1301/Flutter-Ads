@@ -12,14 +12,16 @@ class InterstitialAdController implements AdController {
   int _numLoadAttempts = 0;
   static const int maxLoadAttempts = 5;
 
-  late String _adId;
-  void setAdId(String id) {
-    _adId = id;
-  }
+  late List<String> _adIds;
+  int _currentAdIndex = 0; // Dùng để xác định adId hiện tại
 
   late String _adPlacement;
   void setAdPlacement(String placement) {
     _adPlacement = placement;
+  }
+
+  void setAdId(List<String> ids) {
+    _adIds = ids;
   }
 
   @override
@@ -27,7 +29,7 @@ class InterstitialAdController implements AdController {
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
     // Nếu đang load, đợi quá trình load hoàn tất
     if (_loadingCompleter != null && _loadingCompleter?.isCompleted == false) {
-      log("Đang load quảng cáo, chờ hoàn tất");
+      print("InterAd Controller: " + "Đang load quảng cáo, chờ hoàn tất");
       try {
         await _loadingCompleter?.future;
         return true; // Load thành công
@@ -39,13 +41,16 @@ class InterstitialAdController implements AdController {
 
     // Nếu đã có quảng cáo sẵn sàng, không cần load lại
     if (_interstitialAd != null) {
-      log("Quảng cáo đã sẵn sàng, không cần load lại");
+      print(
+          "InterAd Controller: " + "Quảng cáo đã sẵn sàng, không cần load lại");
       return true;
     }
 
     // Khởi tạo quá trình load quảng cáo
     _loadingCompleter = Completer<void>();
     _numLoadAttempts = 0;
+    _currentAdIndex = 0; // Bắt đầu từ adId đầu tiên
+
     Timer timeoutTimer = Timer(MexaAds.instance.adConstant.timeoutLoadAd, () {
       if (_loadingCompleter?.isCompleted == false) {
         _loadingCompleter?.completeError("Ad load timeout");
@@ -54,7 +59,8 @@ class InterstitialAdController implements AdController {
         onAdFailedToLoad?.call();
       }
     });
-    // Bắt đầu load quảng cáo
+
+    // Bắt đầu load quảng cáo với danh sách adIds
     _loadAdInternal(
       onAdLoaded: () {
         _loadingCompleter?.complete();
@@ -69,6 +75,7 @@ class InterstitialAdController implements AdController {
         onAdFailedToLoad?.call();
       },
     );
+
     // Chờ quá trình load hoàn tất
     try {
       await _loadingCompleter?.future;
@@ -83,24 +90,39 @@ class InterstitialAdController implements AdController {
 
   void _loadAdInternal(
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) {
+    if (_currentAdIndex >= _adIds.length) {
+      print(
+          "InterAd Controller: " + "Tất cả adIds đã thử và không thành công.");
+      onAdFailedToLoad?.call();
+      return;
+    }
+
+    final currentAdId = _adIds[_currentAdIndex];
+    print(
+        "InterAd Controller: " + "Đang load quảng cáo với adId: $currentAdId");
+
     InterstitialAd.load(
-      adUnitId: _adId,
+      adUnitId: currentAdId,
       request: _request,
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _interstitialAd = ad;
           _numLoadAttempts = 0;
           _interstitialAd?.setImmersiveMode(true);
+          print("InterAd Controller: " +
+              "Load thành công với adId: $currentAdId");
           onAdLoaded?.call();
         },
         onAdFailedToLoad: (error) {
           _numLoadAttempts++;
           _interstitialAd = null;
+          print("InterAd Controller: " +
+              "Load thất bại với adId: $currentAdId. Lỗi: $error");
 
-          if (_numLoadAttempts < maxLoadAttempts) {
+          if (_currentAdIndex < _adIds.length - 1) {
+            _currentAdIndex++; // Thử ID tiếp theo
             _loadAdInternal(
-                onAdLoaded: onAdLoaded,
-                onAdFailedToLoad: onAdFailedToLoad); // Thử lại
+                onAdLoaded: onAdLoaded, onAdFailedToLoad: onAdFailedToLoad);
           } else {
             onAdFailedToLoad?.call();
           }
@@ -127,8 +149,8 @@ class InterstitialAdController implements AdController {
     // Hiển thị quảng cáo
     _interstitialAd?.onPaidEvent = (ad, valueMicros, precision, currencyCode) {
       final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
-        networkName:
-            ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
+        networkName: ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+            'Unknow',
         revenue: valueMicros / 1000000.0,
         adUnitId: ad.adUnitId,
         adType: AdType.interstitial.value,
@@ -138,6 +160,7 @@ class InterstitialAdController implements AdController {
       MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
       MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
     };
+
     _interstitialAd?.fullScreenContentCallback =
         FullScreenContentCallback<InterstitialAd>(
       onAdDismissedFullScreenContent: (ad) {
@@ -159,7 +182,7 @@ class InterstitialAdController implements AdController {
         MexaAds.instance.adClickedListener?.call(AdClickedParams(
           networkName:
               ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-          adUnitId: _adId,
+          adUnitId: ad.adUnitId,
           adType: AdType.interstitial.value,
           placement: _adPlacement,
         ));

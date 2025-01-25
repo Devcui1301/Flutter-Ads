@@ -409,8 +409,9 @@ class MexaAds {
 
   NativeAdManager nativeAdManager = NativeAdManager();
 
-  void preloadNative(
+  Future<bool> preloadNative(
       {required String placement,
+      String? adUnitId,
       required NativeAdSize size,
       double? adHeight,
       final Color? adBannerColor,
@@ -431,9 +432,10 @@ class MexaAds {
         PrecisionType precision,
         String currencyCode,
         AdType adType,
-      )? onRevenuePaid}) {
-    if (isAdDisable) return;
-    nativeAdManager.preloadNative(
+      )? onRevenuePaid}) async {
+    if (isAdDisable) return false;
+    final bool result = await nativeAdManager.preloadNative(
+      adUnitId: adUnitId,
       placement: placement,
       size: size,
       adHeight: adHeight,
@@ -450,11 +452,68 @@ class MexaAds {
       gradientOrientation: gradientOrientation,
       borderRadius: borderRadius,
     );
+    if (!result) {
+      nativeAdManager.loadingNativeCompleters.remove(placement);
+      nativeAdManager.nativeAds.remove(placement);
+    }
+    return result;
+  }
+
+  Future<void> preloadNativeHighFloor(
+      {required String placement,
+      required List<String> adUnitIds,
+      required NativeAdSize size,
+      double? adHeight,
+      final Color? adBannerColor,
+      final Color? adBackgrounColor,
+      final List<Color>? adCTABackgroundColor,
+      final Color? adCTATextColor,
+      final Color? adTitleTextColor,
+      final Color? adBodyTextColor,
+      final GradientOrientation? gradientOrientation,
+      VoidCallback? onAdLoaded,
+      VoidCallback? onAdFailedToLoad,
+      VoidCallback? onAdClicked,
+      VoidCallback? onAdClosed,
+      int borderRadius = 12,
+      Function(
+        Ad ad,
+        double valueMicros,
+        PrecisionType precision,
+        String currencyCode,
+        AdType adType,
+      )? onRevenuePaid}) async {
+    for (var adId in adUnitIds) {
+      final result = await preloadNative(
+        adUnitId: adId,
+        placement: placement,
+        size: size,
+        adHeight: adHeight,
+        onAdClosed: onAdClosed,
+        onAdFailedToLoad: onAdFailedToLoad,
+        onAdLoaded: onAdLoaded,
+        onRevenuePaid: onRevenuePaid,
+        adBannerColor: adBannerColor,
+        adBackgrounColor: adBackgrounColor,
+        adCTABackgroundColor: adCTABackgroundColor,
+        adCTATextColor: adCTATextColor,
+        adTitleTextColor: adTitleTextColor,
+        adBodyTextColor: adBodyTextColor,
+        gradientOrientation: gradientOrientation,
+        borderRadius: borderRadius,
+      );
+      if (result) {
+        return;
+      } else {
+        nativeAdManager.loadingNativeCompleters.remove(placement);
+        nativeAdManager.nativeAds.remove(placement);
+      }
+    }
   }
 }
 
 class AdConstant {
-  final Map<String, String> interstitialId;
+  final Map<String, List<String>> interstitialId;
 
   final Map<String, String> nativeId;
   final Map<String, String> inlineId;
@@ -599,41 +658,44 @@ class NativeAdManager {
 
   NativeAdManager();
 
-  Future<void> preloadNative(
-      {required String placement,
-      required NativeAdSize size,
-      double? adHeight,
-      final Color? adBannerColor,
-      final Color? adBackgrounColor,
-      final List<Color>? adCTABackgroundColor,
-      final Color? adCTATextColor,
-      final Color? adTitleTextColor,
-      final Color? adBodyTextColor,
-      final GradientOrientation? gradientOrientation,
-      VoidCallback? onAdLoaded,
-      VoidCallback? onAdFailedToLoad,
-      VoidCallback? onAdClosed,
-      int borderRadius = 12,
-      Function(
-        Ad ad,
-        double valueMicros,
-        PrecisionType precision,
-        String currencyCode,
-        AdType adType,
-      )? onRevenuePaid}) async {
+  Future<bool> preloadNative({
+    required String placement,
+    required NativeAdSize size,
+    String? adUnitId,
+    double? adHeight,
+    final Color? adBannerColor,
+    final Color? adBackgrounColor,
+    final List<Color>? adCTABackgroundColor,
+    final Color? adCTATextColor,
+    final Color? adTitleTextColor,
+    final Color? adBodyTextColor,
+    final GradientOrientation? gradientOrientation,
+    VoidCallback? onAdLoaded,
+    VoidCallback? onAdFailedToLoad,
+    VoidCallback? onAdClosed,
+    int borderRadius = 12,
+    Function(
+      Ad ad,
+      double valueMicros,
+      PrecisionType precision,
+      String currencyCode,
+      AdType adType,
+    )? onRevenuePaid,
+  }) async {
     // Kiểm tra nếu đang load
     if (loadingNativeCompleters[placement]?.isCompleted == false) {
       await loadingNativeCompleters[placement]!.future;
-      return;
+      return false;
     }
 
     // Khởi tạo Completer mới
-    final completer = Completer<void>();
+    final completer = Completer<bool>();
     loadingNativeCompleters[placement] = completer;
 
     try {
       nativeAds[placement] = NativeAd(
-        adUnitId: MexaAds.instance.adConstant.nativeId[placement] ?? '',
+        adUnitId:
+            adUnitId ?? MexaAds.instance.adConstant.nativeId[placement] ?? '',
         request: const AdRequest(),
         nativeAdOptions: size == NativeAdSize.fullScreen
             ? NativeAdOptions(
@@ -695,13 +757,13 @@ class NativeAdManager {
         listener: NativeAdListener(
           onAdLoaded: (Ad ad) {
             logger('NativeAd $placement loaded.');
-            completer.complete();
+            completer.complete(true);
             onAdLoaded?.call();
           },
           onAdFailedToLoad: (Ad ad, LoadAdError error) {
             logger('NativeAd $placement failed to load: $error');
             ad.dispose();
-            completer.completeError(error);
+            completer.complete(false);
             onAdFailedToLoad?.call();
           },
           onAdClosed: (Ad ad) {
@@ -744,10 +806,12 @@ class NativeAdManager {
             );
           },
         ),
-      )..load(); // Chờ hoàn tất
-      await completer.future;
+      )..load();
+
+      return await completer.future;
     } catch (e) {
       logger('Error loading NativeAd $placement: $e');
+      return false;
     }
   }
 }

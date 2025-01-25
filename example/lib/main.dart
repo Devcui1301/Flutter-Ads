@@ -15,8 +15,8 @@ void main() async {
     adjustkey: "l7niimcenmyo",
     value: AdConstant(
         interstitialId: {
-          'inter_1': 'ca-app-pub-3940256099942544/1033173712',
-          'inter_2': 'ca-app-pub-3940256099942544/1033173712',
+          'inter_1': ['ca-app-pub-3940256099942544/1033173712'],
+          'inter_2': ['ca-app-pub-3940256099942544/1033173712'],
         },
         nativeId: {
           'native_1': '/6499/example/native',
