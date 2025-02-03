@@ -792,18 +792,19 @@ class NativeAdManager {
               currencyCode,
               AdType.native,
             );
-            MexaAds.instance.adRevenuePaidListener?.call(
-              AdRevenuePaidParams(
-                networkName:
-                    ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
-                        '',
-                revenue: valueMicros / 1000000.0,
-                adUnitId: ad.adUnitId,
-                adType: AdType.native.value,
-                placement: placement,
-                country: currencyCode,
-              ),
+
+            final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
+              networkName:
+                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                      '',
+              revenue: valueMicros / 1000000.0,
+              adUnitId: ad.adUnitId,
+              adType: AdType.native.value,
+              placement: placement,
+              country: currencyCode,
             );
+            MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+            MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
           },
         ),
       )..load();
