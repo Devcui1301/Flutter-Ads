@@ -234,16 +234,12 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
               _nativeAdIsLoaded = true;
             });
           }
-          Future.delayed(
-            const Duration(milliseconds: 700),
-            () {
-              if (mounted) {
-                setState(() {});
-              }
-            },
-          );
 
           widget.onAdLoaded?.call();
+          await Future.delayed(const Duration(milliseconds: 700));
+          if (mounted) {
+            setState(() {});
+          }
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           logger('..............$NativeAd failedToLoad: $error');
@@ -304,7 +300,6 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
   @override
   void initState() {
     initNativeAd();
-
     super.initState();
   }
 
@@ -321,7 +316,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         logger("Native: Chờ cho việc tải hoàn thành");
         // Chờ cho việc tải hoàn thành
         completer?.future.then((_) async {
-          await Future.delayed(const Duration(milliseconds: 200));
+          // await Future.delayed(const Duration(milliseconds: 200));
 
           if (mounted) {
             setState(() {
@@ -332,16 +327,12 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
           }
           manager.nativeAds.remove(widget.placement);
           manager.loadingNativeCompleters.remove(widget.placement);
-          Future.delayed(
-            const Duration(milliseconds: 700),
-            () {
-              if (mounted) {
-                setState(() {});
-              }
-            },
-          );
+          await Future.delayed(const Duration(milliseconds: 700));
+          if (mounted) {
+            setState(() {});
+          }
         }).catchError((error) async {
-          await Future.delayed(const Duration(milliseconds: 200));
+          // await Future.delayed(const Duration(milliseconds: 200));
           logger("Native: Xử lý lỗi khi tải quảng cáo");
 
           // Xử lý lỗi khi tải quảng cáo
@@ -361,7 +352,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
       } else {
         logger("Native: Nếu đã hoàn thành, cập nhật trạng thái hiển thị ngay");
 
-        await Future.delayed(const Duration(milliseconds: 200));
+        // await Future.delayed(const Duration(milliseconds: 200));
         // Nếu đã hoàn thành, cập nhật trạng thái hiển thị ngay
         if (mounted) {
           setState(() {
@@ -371,14 +362,10 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         }
         manager.nativeAds.remove(widget.placement);
         manager.loadingNativeCompleters.remove(widget.placement);
-        Future.delayed(
-          const Duration(milliseconds: 700),
-          () {
-            if (mounted) {
-              setState(() {});
-            }
-          },
-        );
+        await Future.delayed(const Duration(milliseconds: 700));
+        if (mounted) {
+          setState(() {});
+        }
       }
     } else {
       // Nếu không có completer, bắt đầu tải quảng cáo
