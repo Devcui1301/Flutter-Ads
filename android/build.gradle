@@ -121,4 +121,5 @@ dependencies {
     implementation  'com.unity3d.ads:unity-ads:4.13.0'
     implementation  'com.google.ads.mediation:unity:4.13.0.0'
     implementation  'com.google.ads.mediation:pangle:6.4.0.6.0'
+    implementation  'com.google.ads.mediation:ironsource:8.6.1.0'
 }

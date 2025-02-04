@@ -20,6 +20,9 @@ rootProject.allprojects {
         maven {
             url 'https://artifact.bytedance.com/repository/pangle/'
         }
+        maven {
+            url 'https://android-sdk.is.com/'
+        }
     }
 }
 
