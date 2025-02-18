@@ -104,62 +104,68 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
   }
 
   void _loadAd() async {
-    if (MexaAds.instance.isAdDisable) return;
-    size = widget.adSize == null
-        ? await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
-            MediaQuery.of(context).size.width.truncate())
-        : null;
-    _bannerAd = BannerAd(
-      adUnitId:
-          MexaAds.instance.adConstant.bannerAnchorId[widget.placement] ?? '',
-      size: widget.adSize ?? size!,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (Ad ad) {
-          logger('.............$BannerAd loaded.');
-          setState(() {
-            _bannerAdIsLoaded = true;
-          });
-          widget.onAdLoaded?.call();
-        },
-        onAdClicked: (ad) {
-          widget.onAdClicked?.call();
-          MexaAds.instance.adClickedListener?.call(AdClickedParams(
-            networkName:
-                ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-            adUnitId: ad.adUnitId,
-            adType: AdType.banner.value,
-            placement: widget.placement,
-          ));
-        },
-        onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          logger('..............$BannerAd failedToLoad: $error');
-          ad.dispose();
-          widget.onAdFailedToLoad?.call();
-        },
-        onAdOpened: (Ad ad) {
-          logger('..............$BannerAd onAdOpened.');
-          widget.onAdClicked?.call();
-        },
-        onAdClosed: (Ad ad) {
-          logger('..............$BannerAd onAdClosed.');
-          widget.onAdClosed?.call();
-        },
-        onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-          final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
-            networkName:
-                ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-            revenue: valueMicros / 1000000.0,
-            adUnitId: ad.adUnitId,
-            adType: AdType.banner.value,
-            placement: widget.placement,
-            country: currencyCode,
-          );
-          MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
-          MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
-        },
-      ),
-    );
-    _bannerAd?.load();
+    try {
+      if (MexaAds.instance.isAdDisable) return;
+      size = widget.adSize == null
+          ? await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+              MediaQuery.of(context).size.width.truncate())
+          : null;
+      _bannerAd = BannerAd(
+        adUnitId:
+            MexaAds.instance.adConstant.bannerAnchorId[widget.placement] ?? '',
+        size: widget.adSize ?? size!,
+        request: const AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (Ad ad) {
+            logger('.............$BannerAd loaded.');
+            setState(() {
+              _bannerAdIsLoaded = true;
+            });
+            widget.onAdLoaded?.call();
+          },
+          onAdClicked: (ad) {
+            widget.onAdClicked?.call();
+            MexaAds.instance.adClickedListener?.call(AdClickedParams(
+              networkName:
+                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                      '',
+              adUnitId: ad.adUnitId,
+              adType: AdType.banner.value,
+              placement: widget.placement,
+            ));
+          },
+          onAdFailedToLoad: (Ad ad, LoadAdError error) {
+            logger('..............$BannerAd failedToLoad: $error');
+            ad.dispose();
+            widget.onAdFailedToLoad?.call();
+          },
+          onAdOpened: (Ad ad) {
+            logger('..............$BannerAd onAdOpened.');
+            widget.onAdClicked?.call();
+          },
+          onAdClosed: (Ad ad) {
+            logger('..............$BannerAd onAdClosed.');
+            widget.onAdClosed?.call();
+          },
+          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+            final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
+              networkName:
+                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                      '',
+              revenue: valueMicros / 1000000.0,
+              adUnitId: ad.adUnitId,
+              adType: AdType.banner.value,
+              placement: widget.placement,
+              country: currencyCode,
+            );
+            MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+            MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
+          },
+        ),
+      );
+      _bannerAd?.load();
+    } catch (e) {
+      print(e.toString());
+    }
   }
 }
