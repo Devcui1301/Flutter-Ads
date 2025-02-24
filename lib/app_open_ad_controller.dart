@@ -112,6 +112,7 @@ class AppOpenAdController implements AdController {
     VoidCallback? onAdDisplay,
     VoidCallback? onAdClicked,
     bool reloadAfterShow = true,
+    bool recordLastTimeShowAd = true,
   }) async {
     // Nếu quảng cáo chưa được load, return luôn
     if (_appOpenAd == null) {
@@ -140,7 +141,9 @@ class AppOpenAdController implements AdController {
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _appOpenAd = null;
-        MexaAds.instance.lastestTimeShowAOAAd = DateTime.now();
+        if (recordLastTimeShowAd) {
+          MexaAds.instance.lastestTimeShowInterstitialAd = DateTime.now();
+        }
         if (reloadAfterShow) {
           loadAd();
         }

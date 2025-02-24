@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
@@ -132,14 +131,14 @@ class InterstitialAdController implements AdController {
   }
 
   @override
-  Future<void> showAd({
-    BuildContext? context,
-    VoidCallback? onAdDismissedFullScreenContent,
-    VoidCallback? onAdClicked,
-    VoidCallback? onAdDisplay,
-    VoidCallback? onAdFailedToShow,
-    bool reloadAfterShow = false,
-  }) async {
+  Future<void> showAd(
+      {BuildContext? context,
+      VoidCallback? onAdDismissedFullScreenContent,
+      VoidCallback? onAdClicked,
+      VoidCallback? onAdDisplay,
+      VoidCallback? onAdFailedToShow,
+      bool reloadAfterShow = false,
+      bool recordLastTimeShowAd = true}) async {
     // Nếu quảng cáo chưa được load, return luôn
     if (_interstitialAd == null) {
       onAdFailedToShow?.call();
@@ -167,7 +166,9 @@ class InterstitialAdController implements AdController {
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _interstitialAd = null; // Reset sau khi hiển thị
-        MexaAds.instance.lastestTimeShowInterstitialAd = DateTime.now();
+        if (recordLastTimeShowAd) {
+          MexaAds.instance.lastestTimeShowInterstitialAd = DateTime.now();
+        }
         if (reloadAfterShow) {
           loadAd();
         }

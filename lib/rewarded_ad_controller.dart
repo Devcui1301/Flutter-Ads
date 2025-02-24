@@ -119,6 +119,7 @@ class RewardedAdController implements AdController {
     VoidCallback? onAdDisplay,
     VoidCallback? onAdFailedToShow,
     bool reloadAfterShow = true,
+    bool recordLastTimeShowAd = true,
   }) async {
     // Nếu quảng cáo chưa được load, return luôn
     if (_rewardedAd == null) {

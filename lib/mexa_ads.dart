@@ -168,6 +168,7 @@ class MexaAds {
     Function()? onShowInOffsetTime,
     bool reloadAfterShow = true,
     bool forceShow = true,
+    bool recordLastTimeShowAd = true,
   }) {
     if (!forceShow &&
             MexaAds.instance.lastestTimeShowInterstitialAd
@@ -179,12 +180,12 @@ class MexaAds {
       return;
     }
     _intersAdController[placement]?.showAd(
-      onAdClicked: onAdClicked,
-      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
-      onAdDisplay: onAdDisplay,
-      onAdFailedToShow: onAdFailedToShow,
-      reloadAfterShow: reloadAfterShow,
-    );
+        onAdClicked: onAdClicked,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdDisplay: onAdDisplay,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow,
+        recordLastTimeShowAd: recordLastTimeShowAd);
   }
 
   void loadAndShowInterAd({
@@ -200,6 +201,7 @@ class MexaAds {
     Function()? onShowInOffsetTime,
     bool reloadAfterShow = true,
     bool forceShow = true,
+    bool recordLastTimeShowAd = true,
     Route? customLoadingOverlay,
   }) async {
     if (!forceShow &&
@@ -234,7 +236,8 @@ class MexaAds {
         onAdFailedToShow: onAdFailedToShow,
         reloadAfterShow: reloadAfterShow,
         forceShow: forceShow,
-        onShowInOffsetTime: onShowInOffsetTime);
+        onShowInOffsetTime: onShowInOffsetTime,
+        recordLastTimeShowAd: recordLastTimeShowAd);
   }
 
   Future<bool> loadAppOpenAd({
@@ -258,6 +261,7 @@ class MexaAds {
     bool reloadAfterShow = true,
     Function()? onShowInOffsetTime,
     bool forceShow = true,
+    bool recordLastTimeShowAd = true,
   }) {
     if (!forceShow &&
             MexaAds.instance.lastestTimeShowAOAAd
@@ -269,13 +273,13 @@ class MexaAds {
       return;
     }
     _appOpenAdController[placement]?.showAd(
-      onAdClicked: onAdClicked,
-      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
-      onAdDisplay: onAdDisplay,
-      onAdFailedToShow: onAdFailedToShow,
-      reloadAfterShow: true,
-      context: context,
-    );
+        onAdClicked: onAdClicked,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdDisplay: onAdDisplay,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: true,
+        context: context,
+        recordLastTimeShowAd: recordLastTimeShowAd);
   }
 
   void loadAndShowAppOpenAd(
@@ -289,6 +293,7 @@ class MexaAds {
       Function()? onAdFailedToShow,
       bool showLoading = true,
       bool reloadAfterShow = true,
+      bool recordLastTimeShowAd = true,
       Function()? onShowInOffsetTime,
       bool forceShow = true,
       Route? customLoadingOverlay}) async {
@@ -318,14 +323,14 @@ class MexaAds {
     }
     if (!context.mounted) return;
     showAppOpenAd(
-      placement: placement,
-      onAdClicked: onAdClicked,
-      context: context,
-      onAdDisplay: onAdDisplay,
-      onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
-      onAdFailedToShow: onAdFailedToShow,
-      reloadAfterShow: reloadAfterShow,
-    );
+        placement: placement,
+        onAdClicked: onAdClicked,
+        context: context,
+        onAdDisplay: onAdDisplay,
+        onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
+        onAdFailedToShow: onAdFailedToShow,
+        reloadAfterShow: reloadAfterShow,
+        recordLastTimeShowAd: recordLastTimeShowAd);
   }
 
   Future<bool> loadRewardAd({
