@@ -115,7 +115,10 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
                     MexaAdsPlugin.resources
                         .getDrawable(R.drawable.bg_border_radius_12, null)
                 )
-                DrawableCompat.setTint(wrappedDrawable, Color.parseColor(customOptions["bg_color"] as String))
+                DrawableCompat.setTint(
+                    wrappedDrawable,
+                    Color.parseColor(customOptions["bg_color"] as String)
+                )
 
                 mainAdView.background = wrappedDrawable
             }
@@ -127,40 +130,60 @@ class NativeAdFullScreenFactory : GoogleMobileAdsPlugin.NativeAdFactory {
                     val intColors = colors.map { Color.parseColor(it) }.toIntArray()
 
                     // Kiểm tra hướng gradient (nếu không có thì mặc định LEFT_RIGHT)
-                    val gradientOrientation = when (customOptions["gradient_orientation"] as? String) {
-                        "LEFT_RIGHT" -> GradientDrawable.Orientation.LEFT_RIGHT
-                        "TOP_BOTTOM" -> GradientDrawable.Orientation.TOP_BOTTOM
-                        "RIGHT_LEFT" -> GradientDrawable.Orientation.RIGHT_LEFT
-                        "BOTTOM_TOP" -> GradientDrawable.Orientation.BOTTOM_TOP
-                        "BL_TR" -> GradientDrawable.Orientation.BL_TR
-                        "BR_TL" -> GradientDrawable.Orientation.BR_TL
-                        "TL_BR" -> GradientDrawable.Orientation.TL_BR
-                        "TR_BL" -> GradientDrawable.Orientation.TR_BL
-                        else -> GradientDrawable.Orientation.LEFT_RIGHT // Mặc định
-                    }
+                    val gradientOrientation =
+                        when (customOptions["gradient_orientation"] as? String) {
+                            "LEFT_RIGHT" -> GradientDrawable.Orientation.LEFT_RIGHT
+                            "TOP_BOTTOM" -> GradientDrawable.Orientation.TOP_BOTTOM
+                            "RIGHT_LEFT" -> GradientDrawable.Orientation.RIGHT_LEFT
+                            "BOTTOM_TOP" -> GradientDrawable.Orientation.BOTTOM_TOP
+                            "BL_TR" -> GradientDrawable.Orientation.BL_TR
+                            "BR_TL" -> GradientDrawable.Orientation.BR_TL
+                            "TL_BR" -> GradientDrawable.Orientation.TL_BR
+                            "TR_BL" -> GradientDrawable.Orientation.TR_BL
+                            else -> GradientDrawable.Orientation.LEFT_RIGHT // Mặc định
+                        }
 
                     // Tạo GradientDrawable
                     val gradientDrawable = GradientDrawable(gradientOrientation, intColors)
-                    gradientDrawable.cornerRadius = 8 * Resources.getSystem().displayMetrics.density // Bo góc
+                    gradientDrawable.cornerRadius =
+                        8 * Resources.getSystem().displayMetrics.density // Bo góc
 
                     // Gán gradient drawable cho background của nút
                     (adView.callToActionView as Button).background = gradientDrawable
                 } else if (colors.size == 1) {
                     // Nếu chỉ có 1 màu, sử dụng mã của bạn
+                    val borderRadius = customOptions["cta_border_radius"]
+
+                    val drawableResource = when (borderRadius) {
+                        12 -> R.drawable.bg_border_radius_12
+                        16 -> R.drawable.bg_border_radius_16
+                        20 -> R.drawable.bg_border_radius_20
+                        24 -> R.drawable.bg_border_radius_24
+                        28 -> R.drawable.bg_border_radius_28
+                        30 -> R.drawable.bg_border_radius_30
+                        else -> R.drawable.bg_border_radius_12 // Giá trị mặc định
+                    }
                     val wrappedDrawable = DrawableCompat.wrap(
-                        MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_12, null)
+                        MexaAdsPlugin.resources.getDrawable(drawableResource, null)
                     )
-                    DrawableCompat.setTint(wrappedDrawable, Color.parseColor(colors[0])) // Áp dụng màu HEX vào drawable
+                    DrawableCompat.setTint(
+                        wrappedDrawable,
+                        Color.parseColor(colors[0])
+                    ) // Áp dụng màu HEX vào drawable
 
                     // Gán màu cho background của nút
                     (adView.callToActionView as Button).background = wrappedDrawable
                 } else {
                     // Nếu không có màu nào, set màu mặc định
-                    val defaultColor = Color.parseColor("#FF6200EE") // Màu mặc định (ví dụ: màu tím)
+                    val defaultColor =
+                        Color.parseColor("#FF6200EE") // Màu mặc định (ví dụ: màu tím)
                     val wrappedDrawable = DrawableCompat.wrap(
                         MexaAdsPlugin.resources.getDrawable(R.drawable.bg_border_radius_12, null)
                     )
-                    DrawableCompat.setTint(wrappedDrawable, defaultColor) // Áp dụng màu mặc định vào drawable
+                    DrawableCompat.setTint(
+                        wrappedDrawable,
+                        defaultColor
+                    ) // Áp dụng màu mặc định vào drawable
 
                     // Gán màu mặc định cho background của nút
                     (adView.callToActionView as Button).background = wrappedDrawable
