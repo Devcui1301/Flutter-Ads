@@ -93,7 +93,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
     }
     if (_nativeAdIsLoaded && _nativeAd != null) {
       return SizedBox(
-        height: widget.size == NativeAdSize.layout1
+        height: (widget.size == NativeAdSize.layout1 || widget.size == NativeAdSize.layout1CTATop)
             ? widget.adHeight ??
                 MexaAds.instance.adConstant.nativeAdHeightLayout1
             : widget.size == NativeAdSize.layout2
@@ -149,7 +149,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
     }
     return widget.size == NativeAdSize.fullScreen
         ? const FullScreenNativeAdShimmer()
-        : widget.size == NativeAdSize.layout1
+        : (widget.size == NativeAdSize.layout1 || widget.size == NativeAdSize.layout1CTATop)
             ? const NativeLayout1Shimmer()
             : widget.size == NativeAdSize.layout2
                 ? const NativeLayout2Shimmer()
@@ -183,7 +183,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         'body_text_color': colorToHexString(
             widget.adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
         'ad_height': widget.adHeight == null
-            ? widget.size == NativeAdSize.layout1
+            ? (widget.size == NativeAdSize.layout1 || widget.size == NativeAdSize.layout1CTATop)
                 ? MexaAds.instance.adConstant.nativeAdHeightLayout1.toInt()
                 : widget.size == NativeAdSize.layout2
                     ? MexaAds.instance.adConstant.nativeAdHeightLayout2.toInt()
@@ -221,7 +221,9 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                           ? 'nativeAdNoMediaFactory'
                           : widget.size == NativeAdSize.noMedia2
                               ? 'nativeAdNoMedia2Factory'
-                              : 'nativeAdFullScreenFactory',
+                              : widget.size == NativeAdSize.layout1CTATop
+                                  ? "nativeLayout1CTATopFactory"
+                                  : 'nativeAdFullScreenFactory',
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) async {
           logger("Native: Không có Completer, tải và hiển thị quảng cáo");

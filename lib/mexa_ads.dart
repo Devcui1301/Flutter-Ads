@@ -566,7 +566,8 @@ enum NativeAdSize {
   layout4,
   fullScreen,
   noMedia,
-  noMedia2
+  noMedia2,
+  layout1CTATop
 }
 
 enum AdType {
@@ -719,7 +720,8 @@ class NativeAdManager {
           'body_text_color': colorToHexString(
               adBodyTextColor ?? MexaAds.instance.nativeBodyStyle?.color),
           'ad_height': adHeight == null
-              ? size == NativeAdSize.layout1
+              ? (size == NativeAdSize.layout1 ||
+                      size == NativeAdSize.layout1CTATop)
                   ? MexaAds.instance.adConstant.nativeAdHeightLayout1.toInt()
                   : size == NativeAdSize.layout2
                       ? MexaAds.instance.adConstant.nativeAdHeightLayout2
@@ -758,7 +760,9 @@ class NativeAdManager {
                             ? 'nativeAdNoMediaFactory'
                             : size == NativeAdSize.noMedia2
                                 ? 'nativeAdNoMedia2Factory'
-                                : 'nativeAdFullScreenFactory',
+                                : size == NativeAdSize.layout1CTATop
+                                    ? "nativeLayout1CTATopFactory"
+                                    : 'nativeAdFullScreenFactory',
         listener: NativeAdListener(
           onAdLoaded: (Ad ad) {
             logger('NativeAd $placement loaded.');

@@ -69,6 +69,12 @@ class MexaAdsPlugin : FlutterPlugin, MethodCallHandler {
             "nativeAdNoMedia2Factory",
             NativeAdNoMedia2Factory(LayoutInflater.from(flutterPluginBinding.applicationContext))
         )
+
+        GoogleMobileAdsPlugin.registerNativeAdFactory(
+            flutterPluginBinding.flutterEngine,
+            "nativeLayout1CTATopFactory",
+            NativeLayout1CTATopFactory(LayoutInflater.from(flutterPluginBinding.applicationContext))
+        )
     }
 
 

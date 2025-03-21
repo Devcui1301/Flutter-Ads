@@ -116,6 +116,17 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
                       },
                       child: const Text("No media2"),
                     ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          size = NativeAdSize.layout1CTATop;
+                        });
+                      },
+                      child: const Text("Layout1CTATop"),
+                    ),
                   ],
                 ),
               ),
