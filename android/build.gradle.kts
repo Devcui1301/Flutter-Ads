@@ -1,33 +1,16 @@
 group = "com.mexa.mexa_ads"
 version = "1.0-SNAPSHOT"
 
-buildscript {
-    val kotlinVersion = "2.1.0"
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea")
-        maven("https://artifact.bytedance.com/repository/pangle/")
-    }
-
-    dependencies {
-        classpath("com.android.tools.build:gradle:8.13.0")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-    }
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea")
-        maven("https://artifact.bytedance.com/repository/pangle/")
-    }
-}
-
 plugins {
     id("com.android.library")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
+}
+
+repositories {
+    google()
+    mavenCentral()
+    maven("https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea")
+    maven("https://artifact.bytedance.com/repository/pangle/")
 }
 
 android {
@@ -55,6 +38,7 @@ android {
 
     defaultConfig {
         minSdk = 21
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -77,9 +61,7 @@ android {
             isIncludeAndroidResources = true
             all {
                 it.useJUnitPlatform()
-
                 it.outputs.upToDateWhen { false }
-
                 it.testLogging {
                     events("passed", "skipped", "failed", "standardOut", "standardError")
                     showStandardStreams = true

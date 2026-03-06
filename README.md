@@ -69,13 +69,9 @@ To display customized ads, you must ask for tracking permission under iOS 14+. A
 ```
 
 ### Adjust SDK specific iOS Frameworks
-According to the [Adjust SDK Guidelines](https://dev.adjust.com/en/sdk/flutter/v4/#add-ios-frameworks), you should include the following iOS frameworks in your Xcode workspace. These frameworks enable extra tracking metrics for the SDK. 
+According to the [Adjust SDK Guidelines](https://dev.adjust.com/en/sdk/flutter/v4/#add-ios-frameworks), `AdSupport`, `AdServices`, `StoreKit`, and `AppTrackingTransparency` frameworks are natively required to track ad revenue metrics successfully. 
 
-Open your Xcode project settings `Project -> Build Phases -> Link Binary With Libraries` and explicitly add these (they can be marked as Optional):
-- `AdSupport.framework`
-- `AdServices.framework`
-- `StoreKit.framework`
-- `AppTrackingTransparency.framework`
+> **Great News**: You do NOT need to configure these manually inside your app's Xcode project. The `mexa_ads` plugin automatically links these frameworks directly via its `.podspec` file during `pod install`. So they are handled for you!
 
 ---
 
