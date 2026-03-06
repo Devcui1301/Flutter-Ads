@@ -1,3 +1,6 @@
+# MexaAds Plugin — keep all plugin classes so Flutter can find them via reflection
+-keep class com.mexa.mexa_ads.** { *; }
+
 # Adjust SDK Rules
 -keep public class com.adjust.sdk.** { *; }
 -keep class com.google.android.gms.common.ConnectionResult {
@@ -13,6 +16,7 @@
 -keep public class com.android.installreferrer.** { *; }
 
 # Google Mobile Ads & Core Unity / Pangle / AppLovin / IronSource Mediation Base Keeps
+-keep class io.flutter.plugins.googlemobileads.** { *; }
 -keep class com.google.android.gms.ads.** { *; }
 -keep class com.google.ads.mediation.** { *; }
 -keep class com.applovin.** { *; }
