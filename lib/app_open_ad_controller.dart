@@ -132,7 +132,7 @@ class AppOpenAdController implements AdController {
         ad.dispose();
         _appOpenAd = null;
         if (recordLastTimeShowAd) {
-          MexaAds.instance.lastestTimeShowInterstitialAd = DateTime.now();
+          MexaAds.instance.lastestTimeShowAOAAd = DateTime.now();
         }
         if (reloadAfterShow) {
           loadAd();

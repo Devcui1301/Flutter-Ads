@@ -318,7 +318,7 @@ class MexaAds {
       onAdDismissedFullScreenContent: onAdDismissedFullScreenContent,
       onAdDisplay: onAdDisplay,
       onAdFailedToShow: onAdFailedToShow,
-      reloadAfterShow: true,
+      reloadAfterShow: reloadAfterShow,
       context: context,
       recordLastTimeShowAd: recordLastTimeShowAd,
     );
