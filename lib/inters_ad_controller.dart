@@ -162,6 +162,7 @@ class InterstitialAdController implements AdController {
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _interstitialAd = null; // Reset sau khi hiển thị
+        MexaAds.instance.isShowingFullScreenAd = false;
         if (recordLastTimeShowAd) {
           MexaAds.instance.lastestTimeShowInterstitialAd = DateTime.now();
         }
@@ -173,6 +174,7 @@ class InterstitialAdController implements AdController {
         onAdFailedToShow?.call();
         ad.dispose();
         _interstitialAd = null;
+        MexaAds.instance.isShowingFullScreenAd = false;
       },
       onAdClicked: (ad) {
         onAdClicked?.call();
@@ -186,6 +188,7 @@ class InterstitialAdController implements AdController {
       },
       onAdImpression: (ad) {
         onAdDisplay?.call();
+        MexaAds.instance.isShowingFullScreenAd = true;
       },
     );
 

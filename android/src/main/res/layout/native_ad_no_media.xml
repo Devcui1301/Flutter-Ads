@@ -86,7 +86,7 @@
                 android:id="@+id/ad_call_to_action"
                 android:layout_width="110dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_border_radius_30"
+                android:background="#000000"
                 android:gravity="center"
                 android:lines="1"
                 android:ellipsize="end"

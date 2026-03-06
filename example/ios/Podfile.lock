@@ -1,0 +1,70 @@
+PODS:
+  - Adjust (5.5.0):
+    - Adjust/Adjust (= 5.5.0)
+  - Adjust/Adjust (5.5.0):
+    - AdjustSignature (= 3.62.0)
+  - adjust_sdk (5.5.0):
+    - Adjust (= 5.5.0)
+    - Flutter
+  - AdjustSignature (3.62.0)
+  - Flutter (1.0.0)
+  - Google-Mobile-Ads-SDK (12.14.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - google_mobile_ads (7.0.0):
+    - Flutter
+    - Google-Mobile-Ads-SDK (~> 12.14.0)
+    - webview_flutter_wkwebview
+  - GoogleUserMessagingPlatform (3.1.0)
+  - integration_test (0.0.1):
+    - Flutter
+  - mexa_ads (0.0.1):
+    - Flutter
+    - google_mobile_ads
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - adjust_sdk (from `.symlinks/plugins/adjust_sdk/ios`)
+  - Flutter (from `Flutter`)
+  - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - mexa_ads (from `.symlinks/plugins/mexa_ads/ios`)
+  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
+
+SPEC REPOS:
+  trunk:
+    - Adjust
+    - AdjustSignature
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
+
+EXTERNAL SOURCES:
+  adjust_sdk:
+    :path: ".symlinks/plugins/adjust_sdk/ios"
+  Flutter:
+    :path: Flutter
+  google_mobile_ads:
+    :path: ".symlinks/plugins/google_mobile_ads/ios"
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
+  mexa_ads:
+    :path: ".symlinks/plugins/mexa_ads/ios"
+  webview_flutter_wkwebview:
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
+
+SPEC CHECKSUMS:
+  Adjust: a0095eda439b925f809b0efbf64923c05701e937
+  adjust_sdk: 3dde244a99742bcff3f87d3ea2c78eb567250d64
+  AdjustSignature: 682d788005a6e21557913a9dc0381ae8d943ca0a
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  Google-Mobile-Ads-SDK: 4534fd2dfcd3f705c5485a6633c5188d03d4eed2
+  google_mobile_ads: df3008bafbe1f2ad6862f87334e560d2f047f902
+  GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
+  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+  mexa_ads: d0efa609a9daf8843eec2034bfba77693fab825d
+  webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
+
+PODFILE CHECKSUM: 1b4e38c5a7977b1d2784dfb12c349b2547df92da
+
+COCOAPODS: 1.16.2

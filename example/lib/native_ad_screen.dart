@@ -138,9 +138,9 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
                 logger('revenue: $valueMicros');
               },
               size: size,
-              borderRadius: 30,
+              borderRadius: 4,
               placement: 'native_1',
-              // adCTABackgroundColor: [Colors.amber, Colors.red],
+              adCTABackgroundColor: [Colors.amber, Colors.red],
               adTitleTextColor:
                   size == NativeAdSize.fullScreen ? textStyle.color : null,
               adBodyTextColor:

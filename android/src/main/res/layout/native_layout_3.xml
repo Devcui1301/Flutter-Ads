@@ -97,7 +97,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="12dp"
-            android:background="@drawable/bg_border_radius_12"
+            android:background="#000000"
             android:gravity="center"
             android:lines="1"
             android:paddingVertical="14dp"

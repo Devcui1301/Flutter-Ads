@@ -46,6 +46,10 @@ class MexaAds {
   DateTime lastestTimeShowInterstitialAd = DateTime.now();
   DateTime lastestTimeShowAOAAd = DateTime.now();
 
+  /// Flag indicating if an Interstitial or Rewarded Ad is currently presenting.
+  /// Used to block App Open Ads from showing when the app resumes after closing a full-screen ad.
+  bool isShowingFullScreenAd = false;
+
   //call AdmobAds.instance.openAdInspector();
   void openAdInspector() {
     MobileAds.instance.openAdInspector((error) {
@@ -711,7 +715,8 @@ class NativeAdManager {
           'bg_color': colorToHexString(
               adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
           'cta_bg_color': convertColorsToHex(adCTABackgroundColor ??
-              MexaAds.instance.nativeCTABackgroundColor),
+              MexaAds.instance.nativeCTABackgroundColor ??
+              [MexaAds.instance.primaryColor]),
           'cta_text_color': colorToHexString(
               adCTATextColor ?? MexaAds.instance.nativeCTATitleStyle?.color),
           'title_text_color': colorToHexString(

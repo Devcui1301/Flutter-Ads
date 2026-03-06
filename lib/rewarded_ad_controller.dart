@@ -138,6 +138,7 @@ class RewardedAdController implements AdController {
         onAdDismissedFullScreenContent?.call();
         ad.dispose();
         _rewardedAd = null; // Reset sau khi hiển thị
+        MexaAds.instance.isShowingFullScreenAd = false;
         if (reloadAfterShow) {
           loadAd();
         }
@@ -146,6 +147,7 @@ class RewardedAdController implements AdController {
         onAdFailedToShow?.call();
         ad.dispose();
         _rewardedAd = null;
+        MexaAds.instance.isShowingFullScreenAd = false;
       },
       onAdClicked: (ad) {
         onAdClicked?.call();
@@ -159,6 +161,7 @@ class RewardedAdController implements AdController {
       },
       onAdImpression: (ad) {
         onAdDisplay?.call();
+        MexaAds.instance.isShowingFullScreenAd = true;
       },
     );
 
