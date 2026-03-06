@@ -165,7 +165,7 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
       );
       _bannerAd?.load();
     } catch (e) {
-      print(e.toString());
+      logger(e.toString());
     }
   }
 }

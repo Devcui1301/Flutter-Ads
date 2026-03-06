@@ -64,7 +64,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     MexaAds.instance.preloadNative(
       placement: "native_1",
       size: NativeAdSize.layout1,
-      adCTABackgroundColor: [Color(0xffFFA17A), Color(0xffB50AC1)],
+      adCTABackgroundColor: [const Color(0xffFFA17A), const Color(0xffB50AC1)],
       gradientOrientation: GradientOrientation.leftToRight,
     );
   }

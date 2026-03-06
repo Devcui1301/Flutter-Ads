@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 
 class ContainerShimmer extends StatelessWidget {
   const ContainerShimmer({
-    Key? key,
+    super.key,
     this.width,
     this.height,
-  }) : super(key: key);
+    this.radius,
+  });
 
   final double? width;
   final double? height;
+  final double? radius;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +18,7 @@ class ContainerShimmer extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(radius ?? 2),
         color: Colors.grey,
       ),
     );

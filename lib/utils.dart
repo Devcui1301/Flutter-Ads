@@ -7,14 +7,14 @@ void logger(String message) {
   if (kDebugMode) log(message);
 }
 
-String colorToHexString(Color? color, {bool leadingHashSign = true}) =>
-    color == null
-        ? ''
-        : '${leadingHashSign ? '#' : ''}'
-            '${color.alpha.toRadixString(16).padLeft(2, '0')}'
-            '${color.red.toRadixString(16).padLeft(2, '0')}'
-            '${color.green.toRadixString(16).padLeft(2, '0')}'
-            '${color.blue.toRadixString(16).padLeft(2, '0')}';
+String colorToHexString(Color? color, {bool leadingHashSign = true}) => color ==
+        null
+    ? ''
+    : '${leadingHashSign ? '#' : ''}'
+        '${(color.a * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
+        '${(color.r * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
+        '${(color.g * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
+        '${(color.b * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}';
 List<String> convertColorsToHex(List<Color>? colors) {
   if (colors == null) return [];
   return colors.map((color) => colorToHexString(color)).toList();

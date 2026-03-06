@@ -140,7 +140,7 @@ class _NativeAdScreenState extends State<NativeAdScreen> {
               size: size,
               borderRadius: 4,
               placement: 'native_1',
-              adCTABackgroundColor: [Colors.amber, Colors.red],
+              adCTABackgroundColor: const [Colors.amber, Colors.red],
               adTitleTextColor:
                   size == NativeAdSize.fullScreen ? textStyle.color : null,
               adBodyTextColor:

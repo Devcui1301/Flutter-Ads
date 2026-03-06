@@ -5,11 +5,11 @@ import 'container_shimmer.dart';
 
 class PrimaryShimmer extends StatelessWidget {
   const PrimaryShimmer({
-    Key? key,
+    super.key,
     this.child,
     this.baseColor,
     this.highlightColor,
-  }) : super(key: key);
+  });
   final Widget? child;
   final Color? baseColor;
   final Color? highlightColor;

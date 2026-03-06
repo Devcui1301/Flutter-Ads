@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -26,9 +25,10 @@ class NativeAdWidget extends StatefulWidget {
   final Color? adTitleTextColor;
   final Color? adBodyTextColor;
   final GradientOrientation? gradientOrientation;
-  //chỉ nhận các giá trị 12, 16, 20, 24, 248, 30
   final int? borderRadius;
-
+  final bool showCloseText;
+  final TextStyle? closeTextStyle;
+  final int? closeButtonDelay; // Time in seconds
   final Function(
     Ad ad,
     double valueMicros,
@@ -56,6 +56,9 @@ class NativeAdWidget extends StatefulWidget {
     this.adBodyTextColor,
     this.gradientOrientation,
     this.borderRadius,
+    this.closeButtonDelay,
+    this.showCloseText = false,
+    this.closeTextStyle,
   });
 
   @override
@@ -66,22 +69,40 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
   NativeAd? _nativeAd;
   bool _nativeAdIsLoaded = false;
   LoadAdError? error;
+  bool _isCloseButtonVisible = false;
+  Timer? _closeButtonTimer;
+
+  @override
+  void initState() {
+    initNativeAd();
+    super.initState();
+    // Initialize visibility based on delay
+    if (widget.closeButtonDelay == null || widget.closeButtonDelay == 0) {
+      _isCloseButtonVisible = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _closeButtonTimer?.cancel();
+    _nativeAd?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: widget.size == NativeAdSize.fullScreen ? false : true,
+      canPop: (widget.size == NativeAdSize.fullScreen ||
+              widget.size == NativeAdSize.custom1 ||
+              widget.size == NativeAdSize.custom2)
+          ? false
+          : true,
       child: _buildPage(context),
     );
   }
 
   Widget _buildPage(BuildContext context) {
     if (error != null || MexaAds.instance.isAdDisable) {
-      // if (widget.size == NativeAdSize.fullScreen) {
-      //   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      //     Navigator.pop(context);
-      //   });
-      // }
       return kDebugMode
           ? Container(
               padding: const EdgeInsets.all(10.0),
@@ -113,30 +134,62 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                                 ? widget.adHeight ??
                                     MexaAds.instance.adConstant
                                         .nativeAdHeightLayoutNoMedia2
-                                : 80,
-        child: widget.size == NativeAdSize.fullScreen
+                                : (widget.size == NativeAdSize.fullScreen ||
+                                        widget.size == NativeAdSize.custom1 ||
+                                        widget.size == NativeAdSize.custom2)
+                                    ? MediaQuery.of(context).size.height
+                                    : 80,
+        child: (widget.size == NativeAdSize.fullScreen ||
+                widget.size == NativeAdSize.custom1 ||
+                widget.size == NativeAdSize.custom2)
             ? Scaffold(
+                backgroundColor: widget.adBackgrounColor,
                 body: Stack(
                   children: [
-                    AdWidget(ad: _nativeAd!),
-                    if (widget.showCloseButton)
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: MediaQuery.of(context).padding.top + 16),
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Color.fromARGB(255, 75, 75, 75),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: Colors.white,
-                              )),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(child: AdWidget(ad: _nativeAd!)),
+                        if (widget.showCloseText)
+                          GestureDetector(
+                            onTap: () => widget.onAdFailedToLoad?.call(),
+                            child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 32),
+                                child: Text(
+                                  "Close",
+                                  style: widget.closeTextStyle ??
+                                      TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16),
+                                )),
+                          )
+                      ],
+                    ),
+                    if (widget.showCloseButton && _isCloseButtonVisible)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical:
+                                  MediaQuery.of(context).padding.top + 16),
+                          child: GestureDetector(
+                            onTap: () => widget.onAdFailedToLoad?.call(),
+                            child: Container(
+                                padding: const EdgeInsets.all(1),
+                                decoration: const BoxDecoration(
+                                  color: Color.fromARGB(255, 75, 75, 75),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                )),
+                          ),
                         ),
                       )
                   ],
@@ -147,26 +200,36 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
               ),
       );
     }
-    return widget.size == NativeAdSize.fullScreen
-        ? const FullScreenNativeAdShimmer()
-        : widget.size == NativeAdSize.layout1
-            ? const NativeLayout1Shimmer()
-            : widget.size == NativeAdSize.layout2
-                ? const NativeLayout2Shimmer()
-                : widget.size == NativeAdSize.layout3
-                    ? const NativeLayout3Shimmer()
-                    : widget.size == NativeAdSize.layout4
-                        ? const NativeLayout4Shimmer()
-                        : widget.size == NativeAdSize.noMedia
-                            ? const NoMediaNativeAdShimmer()
-                            : const NoMedia2NativeAdShimmer();
+    return _buildShimmer();
+  }
+
+  Widget _buildShimmer() {
+    return widget.size == NativeAdSize.custom1
+        ? FullScreenNativeAdCustom1Shimmer()
+        : widget.size == NativeAdSize.custom2
+            ? FullScreenNativeAdCustom2Shimmer()
+            : widget.size == NativeAdSize.fullScreen
+                ? const FullScreenNativeAdShimmer()
+                : widget.size == NativeAdSize.layout1
+                    ? const NativeLayout1Shimmer()
+                    : widget.size == NativeAdSize.layout2
+                        ? const NativeLayout2Shimmer()
+                        : widget.size == NativeAdSize.layout3
+                            ? const NativeLayout3Shimmer()
+                            : widget.size == NativeAdSize.layout4
+                                ? const NativeLayout4Shimmer()
+                                : widget.size == NativeAdSize.noMedia
+                                    ? const NoMediaNativeAdShimmer()
+                                    : const NoMedia2NativeAdShimmer();
   }
 
   void _loadAd() {
     _nativeAd = NativeAd(
       adUnitId: MexaAds.instance.adConstant.nativeId[widget.placement] ?? '',
       request: const AdRequest(),
-      nativeAdOptions: widget.size == NativeAdSize.fullScreen
+      nativeAdOptions: (widget.size == NativeAdSize.fullScreen ||
+              widget.size == NativeAdSize.custom1 ||
+              widget.size == NativeAdSize.custom2)
           ? NativeAdOptions(
               adChoicesPlacement: AdChoicesPlacement.topRightCorner,
             )
@@ -175,8 +238,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         'bg_color': colorToHexString(
             widget.adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
         'cta_bg_color': convertColorsToHex(widget.adCTABackgroundColor ??
-            MexaAds.instance.nativeCTABackgroundColor ??
-            [MexaAds.instance.primaryColor]),
+            MexaAds.instance.nativeCTABackgroundColor),
         'cta_text_color': colorToHexString(widget.adCTATextColor ??
             MexaAds.instance.nativeCTATitleStyle?.color),
         'title_text_color': colorToHexString(widget.adTitleTextColor ??
@@ -222,7 +284,11 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                           ? 'nativeAdNoMediaFactory'
                           : widget.size == NativeAdSize.noMedia2
                               ? 'nativeAdNoMedia2Factory'
-                              : 'nativeAdFullScreenFactory',
+                              : widget.size == NativeAdSize.custom1
+                                  ? 'nativeAdFullScreenCustom1Factory'
+                                  : widget.size == NativeAdSize.custom2
+                                      ? 'nativeAdFullScreenCustom2Factory'
+                                      : 'nativeAdFullScreenFactory',
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) async {
           logger("Native: Không có Completer, tải và hiển thị quảng cáo");
@@ -234,6 +300,25 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
             setState(() {
               _nativeAdIsLoaded = true;
             });
+
+            if (widget.closeButtonDelay != null &&
+                widget.closeButtonDelay! > 0) {
+              _closeButtonTimer?.cancel();
+              _closeButtonTimer =
+                  Timer(Duration(seconds: widget.closeButtonDelay!), () {
+                if (mounted) {
+                  setState(() {
+                    _isCloseButtonVisible = true;
+                  });
+                }
+              });
+            } else {
+              if (mounted && !_isCloseButtonVisible) {
+                setState(() {
+                  _isCloseButtonVisible = true;
+                });
+              }
+            }
           }
 
           widget.onAdLoaded?.call();
@@ -294,12 +379,6 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
     )..load();
   }
 
-  @override
-  void initState() {
-    initNativeAd();
-    super.initState();
-  }
-
   void initNativeAd() async {
     if (MexaAds.instance.isAdDisable) return;
     NativeAdManager manager = MexaAds.instance.nativeAdManager;
@@ -339,7 +418,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                   ));
             });
           }
-          print("Error while loading ad: $error");
+          logger("Error while loading ad: $error");
         });
       } else {
         logger("Native: Nếu đã hoàn thành, cập nhật trạng thái hiển thị ngay");
@@ -360,12 +439,6 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
       _loadAd();
     }
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _nativeAd?.dispose();
-  }
 }
 
 class NativeLayout1Shimmer extends StatelessWidget {
@@ -380,9 +453,11 @@ class NativeLayout1Shimmer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10.0),
       width: double.infinity,
-      color: Colors.white,
+      color: const Color(0xff24292E),
       height: adHeight ?? MexaAds.instance.adConstant.nativeAdHeightLayout1,
       child: const PrimaryShimmer(
+        baseColor: Color(0xff454C52),
+        highlightColor: Color(0xff676E76),
         child: Column(
           children: [
             Row(
@@ -845,6 +920,129 @@ class NoMedia2NativeAdShimmer extends StatelessWidget {
               width: double.infinity,
               height: 50,
             )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FullScreenNativeAdCustom1Shimmer extends StatelessWidget {
+  const FullScreenNativeAdCustom1Shimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: PrimaryShimmer(
+                  baseColor: const Color(0xff454C52),
+                  highlightColor: const Color(0xff676E76),
+                  child: ContainerShimmer(
+                    width: double.infinity,
+                    height: double.infinity,
+                    radius: 16,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: PrimaryShimmer(
+                baseColor: const Color(0xff454C52),
+                highlightColor: const Color(0xff676E76),
+                child: Column(
+                  children: const [
+                    ContainerShimmer(
+                      width: 120,
+                      height: 24,
+                      radius: 30,
+                    ),
+                    SizedBox(height: 16),
+                    ContainerShimmer(
+                      width: double.infinity,
+                      height: 16,
+                      radius: 30,
+                    ),
+                    SizedBox(height: 8),
+                    ContainerShimmer(
+                      width: 200,
+                      height: 16,
+                      radius: 30,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                    color: const Color(0xffEBEF26),
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FullScreenNativeAdCustom2Shimmer extends StatelessWidget {
+  const FullScreenNativeAdCustom2Shimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: PrimaryShimmer(
+                baseColor: const Color(0xff454C52),
+                highlightColor: const Color(0xff676E76),
+                child: ContainerShimmer(
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+            ),
+            SizedBox(height: 32),
+            PrimaryShimmer(
+              baseColor: const Color(0xff454C52),
+              highlightColor: const Color(0xff676E76),
+              child: Column(
+                children: const [
+                  ContainerShimmer(
+                    width: 180,
+                    height: 24,
+                    radius: 30,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                    color: const Color(0xffEBEF26),
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
           ],
         ),
       ),
