@@ -5,6 +5,11 @@ import 'package:adjust_sdk/adjust.dart';
 import 'package:adjust_sdk/adjust_ad_revenue.dart';
 import 'package:adjust_sdk/adjust_config.dart';
 import 'package:adjust_sdk/adjust_event.dart';
+
+export 'package:adjust_sdk/adjust.dart';
+export 'package:adjust_sdk/adjust_ad_revenue.dart';
+export 'package:adjust_sdk/adjust_config.dart';
+export 'package:adjust_sdk/adjust_event.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
