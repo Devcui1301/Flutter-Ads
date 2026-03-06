@@ -24,6 +24,12 @@
 @import integration_test;
 #endif
 
+#if __has_include(<mexa_ads/MexaAdsPlugin.h>)
+#import <mexa_ads/MexaAdsPlugin.h>
+#else
+@import mexa_ads;
+#endif
+
 #if __has_include(<webview_flutter_wkwebview/WebViewFlutterPlugin.h>)
 #import <webview_flutter_wkwebview/WebViewFlutterPlugin.h>
 #else
@@ -36,6 +42,7 @@
   [AdjustSdk registerWithRegistrar:[registry registrarForPlugin:@"AdjustSdk"]];
   [FLTGoogleMobileAdsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleMobileAdsPlugin"]];
   [IntegrationTestPlugin registerWithRegistrar:[registry registrarForPlugin:@"IntegrationTestPlugin"]];
+  [MexaAdsPlugin registerWithRegistrar:[registry registrarForPlugin:@"MexaAdsPlugin"]];
   [WebViewFlutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"WebViewFlutterPlugin"]];
 }
 

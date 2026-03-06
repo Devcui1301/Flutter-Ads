@@ -175,7 +175,8 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         'bg_color': colorToHexString(
             widget.adBackgrounColor ?? MexaAds.instance.nativeBackgroundColor),
         'cta_bg_color': convertColorsToHex(widget.adCTABackgroundColor ??
-            MexaAds.instance.nativeCTABackgroundColor),
+            MexaAds.instance.nativeCTABackgroundColor ??
+            [MexaAds.instance.primaryColor]),
         'cta_text_color': colorToHexString(widget.adCTATextColor ??
             MexaAds.instance.nativeCTATitleStyle?.color),
         'title_text_color': colorToHexString(widget.adTitleTextColor ??

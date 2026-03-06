@@ -75,12 +75,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         logger("AppLifecycleState.resumed");
-        if (isAppHidden) {
+        if (isAppHidden && !MexaAds.instance.isShowingFullScreenAd) {
           MexaAds.instance.loadAndShowAppOpenAd(
               context: navKey.currentContext ?? context,
               placement: 'app_open_1');
-          isAppHidden = false;
         }
+        isAppHidden = false;
         break;
       case AppLifecycleState.paused:
         logger("AppLifecycleState.paused");

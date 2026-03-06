@@ -32,3 +32,5 @@ flutter:
       android:
         package: com.mexa.mexa_ads
         pluginClass: MexaAdsPlugin
+      ios:
+        pluginClass: MexaAdsPlugin

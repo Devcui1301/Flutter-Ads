@@ -1,0 +1,111 @@
+import Foundation
+import google_mobile_ads
+
+public class NativeLayout1Factory: BaseNativeAdFactory {
+    public override func buildAdView(style: NativeAdStyleOptions) -> NativeAdView {
+                let adView = NativeAdView()
+        adView.backgroundColor = style.backgroundColor
+        adView.clipsToBounds = true
+
+        // Icon 36x36
+        let iconView = UIImageView()
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.contentMode = .scaleAspectFit
+        iconView.clipsToBounds = true
+        adView.addSubview(iconView)
+        adView.iconView = iconView
+
+        // Ad badge
+        let adBadge = PaddedLabel()
+        adBadge.translatesAutoresizingMaskIntoConstraints = false
+        adBadge.text = "Ad"
+        adBadge.font = UIFont.italicSystemFont(ofSize: 10)
+        adBadge.textColor = .white
+        adBadge.backgroundColor = style.adBannerColor
+        adBadge.textAlignment = .center
+        adBadge.layer.cornerRadius = 4
+        adBadge.clipsToBounds = true
+        adBadge.textInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
+        adBadge.setContentHuggingPriority(.required, for: .horizontal)
+        adBadge.setContentCompressionResistancePriority(.required, for: .horizontal)
+        adView.addSubview(adBadge)
+
+        // Headline (12sp bold, 1 line) — right of badge
+        let headlineView = UILabel()
+        headlineView.translatesAutoresizingMaskIntoConstraints = false
+        headlineView.font = UIFont.boldSystemFont(ofSize: 12)
+        headlineView.textColor = style.titleTextColor
+        headlineView.numberOfLines = 1
+        adView.addSubview(headlineView)
+        adView.headlineView = headlineView
+
+        // Body (11sp, 2 lines) — below icon row, starts from icon's trailing
+        let bodyView = UILabel()
+        bodyView.translatesAutoresizingMaskIntoConstraints = false
+        bodyView.font = UIFont.systemFont(ofSize: 11)
+        bodyView.textColor = style.bodyTextColor
+        bodyView.numberOfLines = 2
+        adView.addSubview(bodyView)
+        adView.bodyView = bodyView
+
+        // MediaView — expanded between body and CTA
+        let mediaView = MediaView()
+        mediaView.translatesAutoresizingMaskIntoConstraints = false
+        mediaView.contentMode = .scaleAspectFill
+        mediaView.clipsToBounds = true
+        adView.addSubview(mediaView)
+        adView.mediaView = mediaView
+
+        // CTA — full width
+        let ctaButton = GradientButton(type: .custom)
+        ctaButton.translatesAutoresizingMaskIntoConstraints = false
+        ctaButton.setTitleColor(style.ctaTextColor, for: .normal)
+        ctaButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        ctaButton.isUserInteractionEnabled = false
+        adView.addSubview(ctaButton)
+        adView.callToActionView = ctaButton
+        style.applyCTABackground(to: ctaButton)
+
+        NSLayoutConstraint.activate([
+            // Icon: top-left, 36x36
+            iconView.topAnchor.constraint(equalTo: adView.topAnchor, constant: 16),
+            iconView.leadingAnchor.constraint(equalTo: adView.leadingAnchor, constant: 16),
+            iconView.widthAnchor.constraint(equalToConstant: 36),
+            iconView.heightAnchor.constraint(equalToConstant: 36),
+
+            // Badge: right of icon
+            adBadge.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 8),
+            adBadge.topAnchor.constraint(equalTo: adView.topAnchor, constant: 16),
+            adBadge.heightAnchor.constraint(equalToConstant: 16),
+
+            // Headline: right of badge
+            headlineView.leadingAnchor.constraint(equalTo: adBadge.trailingAnchor, constant: 4),
+            headlineView.centerYAnchor.constraint(equalTo: adBadge.centerYAnchor),
+            headlineView.trailingAnchor.constraint(equalTo: adView.trailingAnchor, constant: -16),
+
+            // Body: below headline row, starts at icon's trailing
+            bodyView.topAnchor.constraint(equalTo: headlineView.bottomAnchor, constant: 2),
+            bodyView.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 8),
+            bodyView.trailingAnchor.constraint(equalTo: adView.trailingAnchor, constant: -16),
+
+            // Media: expanded between body and CTA, 16dp vertical margins
+            mediaView.topAnchor.constraint(equalTo: bodyView.bottomAnchor, constant: 16),
+            mediaView.leadingAnchor.constraint(equalTo: adView.leadingAnchor, constant: 16),
+            mediaView.trailingAnchor.constraint(equalTo: adView.trailingAnchor, constant: -16),
+            mediaView.bottomAnchor.constraint(equalTo: ctaButton.topAnchor, constant: -16),
+            mediaView.heightAnchor.constraint(greaterThanOrEqualToConstant: 120),
+            mediaView.widthAnchor.constraint(greaterThanOrEqualToConstant: 120),
+
+            // CTA: full width, bottom
+            ctaButton.leadingAnchor.constraint(equalTo: adView.leadingAnchor, constant: 16),
+            ctaButton.trailingAnchor.constraint(equalTo: adView.trailingAnchor, constant: -16),
+            ctaButton.bottomAnchor.constraint(equalTo: adView.bottomAnchor, constant: -16),
+            ctaButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
+        
+        mediaView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        mediaView.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+
+        return adView
+    }
+}
