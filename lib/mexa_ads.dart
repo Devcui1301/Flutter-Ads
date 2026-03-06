@@ -15,6 +15,11 @@ import 'package:mexa_ads/rewarded_ad_controller.dart';
 import 'package:mexa_ads/utils.dart';
 import 'package:mexa_ads/widget/loading_dialog.dart';
 
+export 'package:adjust_sdk/adjust.dart';
+export 'package:adjust_sdk/adjust_ad_revenue.dart';
+export 'package:adjust_sdk/adjust_config.dart';
+export 'package:adjust_sdk/adjust_event.dart';
+
 typedef RevenuePaidedListener = Function(AdRevenuePaidParams params)?;
 typedef AdClickedListener = Function(AdClickedParams params)?;
 
