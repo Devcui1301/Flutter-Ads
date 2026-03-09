@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
@@ -96,8 +97,10 @@ class RewardedAdController implements AdController {
     final currentAdId = _adIds[_currentAdIndex];
     logger("RewardAd Controller: Đang load quảng cáo với adId: $currentAdId");
 
+    final String adId =
+        kDebugMode ? getTestAdUnitId(AdType.rewarded) : currentAdId;
     RewardedAd.load(
-      adUnitId: currentAdId,
+      adUnitId: adId,
       request: _request,
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {

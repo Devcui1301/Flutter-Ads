@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/mexa_ads.dart';
@@ -163,8 +164,10 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
           ? await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
               MediaQuery.of(context).size.width.truncate())
           : null;
+      final String adId =
+          kDebugMode ? getTestAdUnitId(AdType.banner) : currentAdId;
       _bannerAd = BannerAd(
-        adUnitId: currentAdId,
+        adUnitId: adId,
         size: widget.adSize ?? size!,
         request: const AdRequest(),
         listener: BannerAdListener(

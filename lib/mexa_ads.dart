@@ -671,46 +671,6 @@ class AdConstant {
   });
 }
 
-enum NativeAdSize {
-  layout1,
-  layout2,
-  layout3,
-  layout4,
-  fullScreen,
-  noMedia,
-  noMedia2,
-  custom1,
-  custom2,
-}
-
-enum AdType {
-  banner,
-  bannerCollapsible,
-  native,
-  rewarded,
-  interstitial,
-  appOpen,
-}
-
-extension AdTypeExt on AdType {
-  String get value {
-    switch (this) {
-      case AdType.banner:
-        return "Banner";
-      case AdType.bannerCollapsible:
-        return "BannerCollapsible";
-      case AdType.native:
-        return "Native";
-      case AdType.rewarded:
-        return "Rewarded";
-      case AdType.interstitial:
-        return "Interstitial";
-      case AdType.appOpen:
-        return "AppOpen";
-    }
-  }
-}
-
 class AdRevenuePaidParams {
   final String mediation;
   final String networkName;
@@ -812,8 +772,10 @@ class NativeAdManager {
     loadingNativeCompleters[placement] = completer;
 
     try {
+      final String currentAdId =
+          kDebugMode ? getTestAdUnitId(AdType.native) : (adUnitId ?? "");
       nativeAds[placement] = NativeAd(
-        adUnitId: adUnitId ?? "",
+        adUnitId: currentAdId,
         request: const AdRequest(),
         nativeAdOptions: size == NativeAdSize.fullScreen
             ? NativeAdOptions(
@@ -982,8 +944,10 @@ class BannerAdManager {
       }
       size ??= AdSize.banner;
 
+      final String currentAdId =
+          kDebugMode ? getTestAdUnitId(AdType.banner) : (adUnitId ?? "");
       bannerAds[placement] = BannerAd(
-        adUnitId: adUnitId ?? "",
+        adUnitId: currentAdId,
         size: size,
         request: const AdRequest(),
         listener: BannerAdListener(
@@ -1083,8 +1047,11 @@ class CollapsibleAdManager {
       }
       final adRequest = AdRequest(extras: extras);
 
+      final String currentAdId = kDebugMode
+          ? getTestAdUnitId(AdType.bannerCollapsible)
+          : (adUnitId ?? "");
       collapsibleAds[placement] = BannerAd(
-        adUnitId: adUnitId ?? "",
+        adUnitId: currentAdId,
         size: size,
         request: adRequest,
         listener: BannerAdListener(

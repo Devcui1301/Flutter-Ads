@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
@@ -93,8 +94,10 @@ class AppOpenAdController implements AdController {
     final currentAdId = _adIds[_currentAdIndex];
     logger("AppOpenAd Controller: Đang load quảng cáo với adId: $currentAdId");
 
+    final String adId =
+        kDebugMode ? getTestAdUnitId(AdType.appOpen) : currentAdId;
     AppOpenAd.load(
-      adUnitId: currentAdId,
+      adUnitId: adId,
       request: _request,
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {

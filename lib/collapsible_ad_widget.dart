@@ -130,8 +130,9 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
       }
 
       BannerAd(
-        adUnitId:
-            kDebugMode ? 'ca-app-pub-3940256099942544/2014213617' : currentAdId,
+        adUnitId: kDebugMode
+            ? getTestAdUnitId(AdType.bannerCollapsible)
+            : currentAdId,
         request: _adRequest ?? const AdRequest(),
         size: size,
         listener: BannerAdListener(

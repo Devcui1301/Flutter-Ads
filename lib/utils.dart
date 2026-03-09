@@ -37,6 +37,7 @@ String colorToHexString(Color? color, {bool leadingHashSign = true}) => color ==
         '${(color.r * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
         '${(color.g * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}'
         '${(color.b * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0')}';
+
 List<String> convertColorsToHex(List<Color>? colors) {
   if (colors == null) return [];
   return colors.map((color) => colorToHexString(color)).toList();
@@ -72,5 +73,70 @@ String gradientOrientationToString(GradientOrientation orientation) {
       return "TL_BR";
     case GradientOrientation.topRightToBottomLeft:
       return "TR_BL";
+  }
+}
+
+enum NativeAdSize {
+  layout1,
+  layout2,
+  layout3,
+  layout4,
+  fullScreen,
+  noMedia,
+  noMedia2,
+  custom1,
+  custom2,
+}
+
+enum AdType {
+  banner,
+  bannerCollapsible,
+  native,
+  rewarded,
+  interstitial,
+  appOpen,
+}
+
+extension AdTypeExt on AdType {
+  String get value {
+    switch (this) {
+      case AdType.banner:
+        return "Banner";
+      case AdType.bannerCollapsible:
+        return "BannerCollapsible";
+      case AdType.native:
+        return "Native";
+      case AdType.rewarded:
+        return "Rewarded";
+      case AdType.interstitial:
+        return "Interstitial";
+      case AdType.appOpen:
+        return "AppOpen";
+    }
+  }
+}
+
+const String debugInterId = "ca-app-pub-3940256099942544/1033173712";
+const String debugNativeId = "/6499/example/native";
+const String debugAOAId = "ca-app-pub-3940256099942544/9257395921";
+const String debugBannerId = "ca-app-pub-3940256099942544/6300978111";
+const String debugRewardId = "ca-app-pub-3940256099942544/5224354917";
+const String debugBannerCollapsibleId =
+    "ca-app-pub-3940256099942544/2014213617";
+
+String getTestAdUnitId(AdType type) {
+  switch (type) {
+    case AdType.interstitial:
+      return debugInterId;
+    case AdType.native:
+      return debugNativeId;
+    case AdType.appOpen:
+      return debugAOAId;
+    case AdType.banner:
+      return debugBannerId;
+    case AdType.rewarded:
+      return debugRewardId;
+    case AdType.bannerCollapsible:
+      return debugBannerCollapsibleId;
   }
 }

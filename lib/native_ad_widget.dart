@@ -237,7 +237,8 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
       return;
     }
 
-    final currentAdId = adIds[adIndex];
+    final currentAdId =
+        kDebugMode ? getTestAdUnitId(AdType.native) : adIds[adIndex];
     logger('Native Ad: Đang load với adId: $currentAdId (index: $adIndex)');
 
     _nativeAd = NativeAd(
