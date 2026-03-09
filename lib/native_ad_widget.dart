@@ -223,9 +223,25 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                                     : const NoMedia2NativeAdShimmer();
   }
 
-  void _loadAd() {
+  void _loadAd({int adIndex = 0}) {
+    final adIds = MexaAds.instance.adConstant.nativeId[widget.placement] ?? [];
+    if (adIndex >= adIds.length) {
+      logger('Native Ad: Tất cả adIds đã thử và không thành công.');
+      if (mounted) {
+        setState(() {
+          error = LoadAdError(1, "All ad IDs failed", "",
+              const ResponseInfo(responseExtras: {}));
+        });
+      }
+      widget.onAdFailedToLoad?.call();
+      return;
+    }
+
+    final currentAdId = adIds[adIndex];
+    logger('Native Ad: Đang load với adId: $currentAdId (index: $adIndex)');
+
     _nativeAd = NativeAd(
-      adUnitId: MexaAds.instance.adConstant.nativeId[widget.placement] ?? '',
+      adUnitId: currentAdId,
       request: const AdRequest(),
       nativeAdOptions: (widget.size == NativeAdSize.fullScreen ||
               widget.size == NativeAdSize.custom1 ||
@@ -291,9 +307,9 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                                       : 'nativeAdFullScreenFactory',
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) async {
-          logger("Native: Không có Completer, tải và hiển thị quảng cáo");
+          logger("Native Ad: Load thành công với adId: $currentAdId");
 
-          logger('.............$NativeAd loaded.');
+          logger('Native Ad: Loaded');
           error = null;
           // OPTIMIZATION: Removed unnecessary 900ms delay (200ms + 700ms)
           if (mounted) {
@@ -324,21 +340,28 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
           widget.onAdLoaded?.call();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          logger('..............$NativeAd failedToLoad: $error');
+          logger(
+              'Native Ad: Load thất bại với adId: $currentAdId. Lỗi: $error');
           ad.dispose();
-          if (mounted) {
-            setState(() {
-              this.error = error;
-            });
+
+          // Try next ad ID
+          if (adIndex < adIds.length - 1) {
+            _loadAd(adIndex: adIndex + 1);
+          } else {
+            if (mounted) {
+              setState(() {
+                this.error = error;
+              });
+            }
+            widget.onAdFailedToLoad?.call();
           }
-          widget.onAdFailedToLoad?.call();
         },
         onAdOpened: (Ad ad) {
-          logger('..............$NativeAd onAdOpened.');
+          logger('Native Ad: onAdOpened');
           widget.onAdClicked?.call();
         },
         onAdClosed: (Ad ad) {
-          logger('..............$NativeAd onAdClosed.');
+          logger('Native Ad: onAdClosed');
           widget.onAdClosed?.call();
         },
         onAdClicked: (ad) {
@@ -354,8 +377,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
           );
         },
         onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-          logger(
-              '.............. NativeAd onPaidEvent ${'$valueMicros $precision'}');
+          logger('Native Ad: onPaidEvent $valueMicros $precision');
           widget.onRevenuePaid?.call(
             ad,
             valueMicros,
@@ -389,7 +411,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
           manager.loadingNativeCompleters[widget.placement];
 
       if (completer?.isCompleted == false) {
-        logger("Native: Chờ cho việc tải hoàn thành");
+        logger("Native Ad: Chờ cho việc tải hoàn thành");
         // Chờ cho việc tải hoàn thành
         completer?.future.then((_) async {
           // OPTIMIZATION: Removed unnecessary delays
@@ -404,7 +426,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
           manager.loadingNativeCompleters.remove(widget.placement);
         }).catchError((error) async {
           // OPTIMIZATION: Removed unnecessary delay
-          logger("Native: Xử lý lỗi khi tải quảng cáo");
+          logger("Native Ad: Xử lý lỗi khi tải quảng cáo");
 
           // Xử lý lỗi khi tải quảng cáo
           if (mounted) {
@@ -418,10 +440,11 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
                   ));
             });
           }
-          logger("Error while loading ad: $error");
+          logger("Native Ad: Error while loading ad: $error");
         });
       } else {
-        logger("Native: Nếu đã hoàn thành, cập nhật trạng thái hiển thị ngay");
+        logger(
+            "Native Ad: Nếu đã hoàn thành, cập nhật trạng thái hiển thị ngay");
 
         // OPTIMIZATION: Removed unnecessary delays
         // Nếu đã hoàn thành, cập nhật trạng thái hiển thị ngay

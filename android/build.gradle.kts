@@ -44,11 +44,9 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
-            resValue("string", "banner_collapsible_id", "")
         }
 
         getByName("debug") {
-            resValue("string", "banner_collapsible_id", "ca-app-pub-3940256099942544/2014213617")
         }
     }
 

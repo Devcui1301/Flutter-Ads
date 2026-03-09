@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/mexa_ads.dart';
@@ -92,9 +93,50 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
       (timeStamp) {
-        _loadAd();
+        initBannerAd();
       },
     );
+  }
+
+  void initBannerAd() {
+    if (MexaAds.instance.isAdDisable) return;
+    BannerAdManager manager = MexaAds.instance.bannerAdManager;
+
+    // Check if a preloaded ad exists
+    if (manager.loadingBannerCompleters[widget.placement] != null) {
+      Completer<void>? completer =
+          manager.loadingBannerCompleters[widget.placement];
+
+      if (completer?.isCompleted == false) {
+        logger("Banner Ad: Waiting for preload to complete");
+        completer?.future.then((_) {
+          if (mounted) {
+            setState(() {
+              _bannerAdIsLoaded = true;
+              _bannerAd = manager.bannerAds[widget.placement];
+            });
+          }
+          manager.bannerAds.remove(widget.placement);
+          manager.loadingBannerCompleters.remove(widget.placement);
+        }).catchError((error) {
+          logger("Banner Ad: Preload failed, falling back to _loadAd: $error");
+          _loadAd();
+        });
+      } else {
+        logger("Banner Ad: Using preloaded ad");
+        if (mounted) {
+          setState(() {
+            _bannerAdIsLoaded = true;
+            _bannerAd = manager.bannerAds[widget.placement];
+          });
+        }
+        manager.bannerAds.remove(widget.placement);
+        manager.loadingBannerCompleters.remove(widget.placement);
+      }
+    } else {
+      // No preloaded ad, load directly
+      _loadAd();
+    }
   }
 
   @override
@@ -103,21 +145,31 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
     _bannerAd?.dispose();
   }
 
-  void _loadAd() async {
+  void _loadAd({int adIndex = 0}) async {
     try {
       if (MexaAds.instance.isAdDisable) return;
+      final adIds =
+          MexaAds.instance.adConstant.bannerAnchorId[widget.placement] ?? [];
+      if (adIndex >= adIds.length) {
+        logger('Banner Ad: Tất cả adIds đã thử và không thành công.');
+        widget.onAdFailedToLoad?.call();
+        return;
+      }
+
+      final currentAdId = adIds[adIndex];
+      logger('Banner Ad: Đang load với adId: $currentAdId (index: $adIndex)');
+
       size = widget.adSize == null
           ? await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
               MediaQuery.of(context).size.width.truncate())
           : null;
       _bannerAd = BannerAd(
-        adUnitId:
-            MexaAds.instance.adConstant.bannerAnchorId[widget.placement] ?? '',
+        adUnitId: currentAdId,
         size: widget.adSize ?? size!,
         request: const AdRequest(),
         listener: BannerAdListener(
           onAdLoaded: (Ad ad) {
-            logger('.............$BannerAd loaded.');
+            logger('Banner Ad: Load thành công với adId: $currentAdId');
             setState(() {
               _bannerAdIsLoaded = true;
             });
@@ -135,16 +187,23 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
             ));
           },
           onAdFailedToLoad: (Ad ad, LoadAdError error) {
-            logger('..............$BannerAd failedToLoad: $error');
+            logger(
+                'Banner Ad: Load thất bại với adId: $currentAdId. Lỗi: $error');
             ad.dispose();
-            widget.onAdFailedToLoad?.call();
+
+            // Try next ad ID
+            if (adIndex < adIds.length - 1) {
+              _loadAd(adIndex: adIndex + 1);
+            } else {
+              widget.onAdFailedToLoad?.call();
+            }
           },
           onAdOpened: (Ad ad) {
-            logger('..............$BannerAd onAdOpened.');
+            logger('Banner Ad: onAdOpened');
             widget.onAdClicked?.call();
           },
           onAdClosed: (Ad ad) {
-            logger('..............$BannerAd onAdClosed.');
+            logger('Banner Ad: onAdClosed');
             widget.onAdClosed?.call();
           },
           onPaidEvent: (ad, valueMicros, precision, currencyCode) {

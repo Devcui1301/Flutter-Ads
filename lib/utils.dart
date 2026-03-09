@@ -3,8 +3,30 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 
+enum MexaAdsLogLevel { none, debug, all }
+
+MexaAdsLogLevel _currentLogLevel = MexaAdsLogLevel.debug;
+
+void setMexaAdsLogLevel(MexaAdsLogLevel level) {
+  _currentLogLevel = level;
+}
+
 void logger(String message) {
-  if (kDebugMode) log(message);
+  switch (_currentLogLevel) {
+    case MexaAdsLogLevel.none:
+      break;
+    case MexaAdsLogLevel.debug:
+      if (kDebugMode) log(message);
+      break;
+    case MexaAdsLogLevel.all:
+      if (kDebugMode) {
+        log(message);
+      } else {
+        // In release mode, use print to ensure logs appear in Logcat
+        print(message);
+      }
+      break;
+  }
 }
 
 String colorToHexString(Color? color, {bool leadingHashSign = true}) => color ==
