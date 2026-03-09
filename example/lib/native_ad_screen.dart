@@ -1,4 +1,3 @@
-import 'package:mexa_ads/mexa_ads.dart';
 import 'package:mexa_ads/native_ad_widget.dart';
 import 'package:mexa_ads/utils.dart';
 import 'package:flutter/material.dart';
