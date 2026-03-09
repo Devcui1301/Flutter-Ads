@@ -69,13 +69,9 @@ To display customized ads, you must ask for tracking permission under iOS 14+. A
 ```
 
 ### Adjust SDK specific iOS Frameworks
-According to the [Adjust SDK Guidelines](https://dev.adjust.com/en/sdk/flutter/v4/#add-ios-frameworks), you should include the following iOS frameworks in your Xcode workspace. These frameworks enable extra tracking metrics for the SDK. 
+According to the [Adjust SDK Guidelines](https://dev.adjust.com/en/sdk/flutter/v4/#add-ios-frameworks), `AdSupport`, `AdServices`, `StoreKit`, and `AppTrackingTransparency` frameworks are natively required to track ad revenue metrics successfully. 
 
-Open your Xcode project settings `Project -> Build Phases -> Link Binary With Libraries` and explicitly add these (they can be marked as Optional):
-- `AdSupport.framework`
-- `AdServices.framework`
-- `StoreKit.framework`
-- `AppTrackingTransparency.framework`
+> **Great News**: You do NOT need to configure these manually inside your app's Xcode project. The `mexa_ads` plugin automatically links these frameworks directly via its `.podspec` file during `pod install`. So they are handled for you!
 
 ---
 
@@ -98,22 +94,22 @@ void main() async {
         'inter_1': ['ca-app-pub-xxx/yyy', 'ca-app-pub-xxx/zzz'], // Supports waterfall Ad IDs
       },
       nativeId: {
-        'native_1': '/6499/example/native',
+        'native_1': ['/6499/example/native', '/6499/example/native_backup'], // Supports multi-ID fallback
       },
       appOpenId: {
-        'app_open_1': 'ca-app-pub-3940256099942544/9257395921',
+        'app_open_1': ['ca-app-pub-3940256099942544/9257395921'],
       },
       bannerAnchorId: {
-        'banner_1': 'ca-app-pub-3940256099942544/6300978111',
+        'banner_1': ['ca-app-pub-3940256099942544/6300978111'],
       },
       inlineId: {
         'inline_1': 'ca-app-pub-3940256099942544/9214589741',
       },
       rewardedAdId: {
-        'rewarded_1': 'ca-app-pub-3940256099942544/5224354917',
+        'rewarded_1': ['ca-app-pub-3940256099942544/5224354917'],
       },
       bannerCollapsibleId: {
-        'collap_1': 'ca-app-pub-3940256099942544/2014213617',
+        'collap_1': ['ca-app-pub-3940256099942544/2014213617'],
       },
       interstitialOffsetTime: const Duration(seconds: 30),
       appOpenOffsetTime: const Duration(seconds: 30),
@@ -135,7 +131,7 @@ void main() async {
 ---
 
 ### 4.2. Preloading Ads
-To reduce latency before showing ads later in the app's lifecycle, ad pre-loading is heavily recommended, especially for Native layouts.
+To reduce latency before showing ads later in the app's lifecycle, ad pre-loading is heavily recommended. All preload methods now support **automatic multi-ID fallback**: if the first ad ID in the list fails to load, it will automatically try the next one until a success occurs or all IDs are exhausted.
 
 #### Preload Native Ad
 ```dart
@@ -158,6 +154,33 @@ MexaAds.instance.preloadNative(
   onRevenuePaid: (ad, valueMicros, precision, currencyCode, adType) {
     print('Earned revenue: $valueMicros $currencyCode');
   }
+);
+```
+
+#### Preload Banner Anchor Ad
+```dart
+MexaAds.instance.preloadBannerAnchor(
+  placement: "banner_1",
+  screenWidth: 360, // Screen width for adaptive banner size
+  adSize: null, // Optional fixed AdSize
+  onAdLoaded: () => print('Banner preloaded successfully'),
+  onAdFailedToLoad: () => print('Banner preload failed'),
+  onAdClicked: () => print('Ad clicked'),
+  onAdClosed: () => print('Ad closed'),
+);
+```
+
+#### Preload Collapsible Ad
+```dart
+MexaAds.instance.preloadCollapsible(
+  placement: "collap_1",
+  screenWidth: 360, // Screen width for adaptive banner size
+  isBottom: true, // Anchor position: true for bottom, false for top
+  isCollapsOnce: true, // Only collapse automatically once 
+  onAdLoaded: () => print('Collapsible preloaded successfully'),
+  onAdFailedToLoad: () => print('Collapsible preload failed'),
+  onAdClicked: () => print('Ad clicked'),
+  onAdClosed: () => print('Ad closed'),
 );
 ```
 

@@ -14,7 +14,7 @@
 
 // ignore_for_file: public_member_api_docs
 
-import 'dart:developer';
+import 'package:mexa_ads/utils.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -79,7 +79,7 @@ class _InlineAdaptiveAdWidgetState extends State<InlineAdaptiveAdWidget> {
       request: const AdManagerAdRequest(),
       listener: AdManagerBannerAdListener(
         onAdLoaded: (Ad ad) async {
-          log('Inline adaptive banner loaded: ${ad.responseInfo}');
+          logger('Inline Ad: adaptive banner loaded: ${ad.responseInfo}');
           // After the ad is loaded, get the platform ad size and use it to
           // update the height of the container. This is necessary because the
           // height can change after the ad is loaded.
@@ -88,7 +88,8 @@ class _InlineAdaptiveAdWidgetState extends State<InlineAdaptiveAdWidget> {
 
           final AdSize? size = await bannerAd.getPlatformAdSize();
           if (size == null) {
-            log('Error: getPlatformAdSize() returned null for $bannerAd');
+            logger(
+                'Inline Ad: Error: getPlatformAdSize() returned null for $bannerAd');
             return;
           }
 
@@ -99,7 +100,7 @@ class _InlineAdaptiveAdWidgetState extends State<InlineAdaptiveAdWidget> {
           });
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          log('Inline adaptive banner failedToLoad: $error');
+          logger('Inline Ad: adaptive banner failedToLoad: $error');
           ad.dispose();
           widget.onAdFailedToLoad?.call();
         },

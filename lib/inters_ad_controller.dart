@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mexa_ads/ad_controller.dart';
 import 'package:mexa_ads/mexa_ads.dart';
+import 'package:mexa_ads/utils.dart';
 
 class InterstitialAdController implements AdController {
   final AdRequest _request = const AdRequest();
@@ -27,7 +29,7 @@ class InterstitialAdController implements AdController {
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) async {
     // Nếu đang load, đợi quá trình load hoàn tất
     if (_loadingCompleter != null && _loadingCompleter?.isCompleted == false) {
-      print("InterAd Controller: " + "Đang load quảng cáo, chờ hoàn tất");
+      logger("InterAd Controller: Đang load quảng cáo, chờ hoàn tất");
       try {
         await _loadingCompleter?.future;
         return true; // Load thành công
@@ -39,8 +41,7 @@ class InterstitialAdController implements AdController {
 
     // Nếu đã có quảng cáo sẵn sàng, không cần load lại
     if (_interstitialAd != null) {
-      print(
-          "InterAd Controller: " + "Quảng cáo đã sẵn sàng, không cần load lại");
+      logger("InterAd Controller: Quảng cáo đã sẵn sàng, không cần load lại");
       return true;
     }
 
@@ -88,31 +89,30 @@ class InterstitialAdController implements AdController {
   void _loadAdInternal(
       {VoidCallback? onAdLoaded, VoidCallback? onAdFailedToLoad}) {
     if (_currentAdIndex >= _adIds.length) {
-      print(
-          "InterAd Controller: " + "Tất cả adIds đã thử và không thành công.");
+      logger("InterAd Controller: Tất cả adIds đã thử và không thành công.");
       onAdFailedToLoad?.call();
       return;
     }
 
     final currentAdId = _adIds[_currentAdIndex];
-    print(
-        "InterAd Controller: " + "Đang load quảng cáo với adId: $currentAdId");
+    logger("InterAd Controller: Đang load quảng cáo với adId: $currentAdId");
 
+    final String adId =
+        kDebugMode ? getTestAdUnitId(AdType.interstitial) : currentAdId;
     InterstitialAd.load(
-      adUnitId: currentAdId,
+      adUnitId: adId,
       request: _request,
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _interstitialAd = ad;
           _interstitialAd?.setImmersiveMode(true);
-          print("InterAd Controller: " +
-              "Load thành công với adId: $currentAdId");
+          logger("InterAd Controller: Load thành công với adId: $currentAdId");
           onAdLoaded?.call();
         },
         onAdFailedToLoad: (error) {
           _interstitialAd = null;
-          print("InterAd Controller: " +
-              "Load thất bại với adId: $currentAdId. Lỗi: $error");
+          logger(
+              "InterAd Controller: Load thất bại với adId: $currentAdId. Lỗi: $error");
 
           if (_currentAdIndex < _adIds.length - 1) {
             _currentAdIndex++; // Thử ID tiếp theo

@@ -1,12 +1,6 @@
 import 'package:mexa_ads/mexa_ads.dart';
 import 'package:mexa_ads/utils.dart';
-import 'package:mexa_ads_example/app_open_ad_screen.dart';
-import 'package:mexa_ads_example/banner_anchor_ad_screen.dart';
-import 'package:mexa_ads_example/collapsible_ad_screen.dart';
-import 'package:mexa_ads_example/inline_ad_screen.dart';
-import 'package:mexa_ads_example/inters_ad_screen.dart';
-import 'package:mexa_ads_example/native_ad_screen.dart';
-import 'package:mexa_ads_example/rewarded_open_ad_screen.dart';
+import 'package:mexa_ads_example/preload_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -19,24 +13,24 @@ void main() async {
           'inter_2': ['ca-app-pub-3940256099942544/1033173712'],
         },
         nativeId: {
-          'native_1': '/6499/example/native',
-          'native_2': '/6499/example/native',
+          'native_1': ['/6499/example/native'],
+          'native_2': ['/6499/example/native'],
         },
         appOpenId: {
-          'app_open_1': 'ca-app-pub-3940256099942544/9257395921',
-          'app_open_2': 'ca-app-pub-3940256099942544/9257395921',
+          'app_open_1': ['ca-app-pub-3940256099942544/9257395921'],
+          'app_open_2': ['ca-app-pub-3940256099942544/9257395921'],
         },
         bannerAnchorId: {
-          'banner_1': 'ca-app-pub-3940256099942544/6300978111',
-          'banner_2': 'ca-app-pub-3940256099942544/6300978111',
+          'banner_1': ['ca-app-pub-3940256099942544/6300978111'],
+          'banner_2': ['ca-app-pub-3940256099942544/6300978111'],
         },
         rewardedAdId: {
-          'rewarded_1': 'ca-app-pub-3940256099942544/5224354917',
-          'rewarded_2': 'ca-app-pub-3940256099942544/5224354917',
+          'rewarded_1': ['ca-app-pub-3940256099942544/5224354917'],
+          'rewarded_2': ['ca-app-pub-3940256099942544/5224354917'],
         },
         bannerCollapsibleId: {
-          "collap_1": "ca-app-pub-3940256099942544/2014213617",
-          "collap_2": "ca-app-pub-3940256099942544/2014213617",
+          "collap_1": ["ca-app-pub-3940256099942544/2014213617"],
+          "collap_2": ["ca-app-pub-3940256099942544/8388050270"],
         },
         interstitialOffsetTime: const Duration(seconds: 30),
         appOpenOffsetTime: const Duration(seconds: 30),
@@ -57,16 +51,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  late GlobalKey<NavigatorState> navKey = GlobalKey();
+  bool isAppHidden = false;
+
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
-    MexaAds.instance.preloadNative(
-      placement: "native_1",
-      size: NativeAdSize.layout1,
-      adCTABackgroundColor: [Color(0xffFFA17A), Color(0xffB50AC1)],
-      gradientOrientation: GradientOrientation.leftToRight,
-    );
   }
 
   @override
@@ -96,21 +87,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
   }
 
-  bool isAppHidden = false;
-  final adsType = const [
-    'Native',
-    'AOA',
-    'Interstitial',
-    'Banner Anchor',
-    'Inline',
-    'Collapsible',
-    'Rewarded',
-    'Open Ad Inspector'
-  ];
-  String selectedAd = 'AOA';
-
-  late GlobalKey<NavigatorState> navKey = GlobalKey();
-
   @override
   Widget build(BuildContext context) {
     MexaAds.instance.adConstant.nativeAdHeightLayout1 =
@@ -118,56 +94,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return MaterialApp(
       navigatorKey: navKey,
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.blue[50],
-        appBar: AppBar(
-          title: const Text(
-            'Admob Admob Plugin example',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.orange,
-            ),
-          ),
-          actions: [
-            DropdownButton<String>(
-              icon: const Icon(
-                Icons.change_circle_sharp,
-                size: 24,
-              ),
-              isDense: true,
-              value: selectedAd,
-              items: adsType
-                  .map((e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedAd = value.toString();
-                });
-                if (value.toString() == "Open Ad Inspector") {
-                  MexaAds.instance.openAdInspector();
-                }
-              },
-            ),
-          ],
-        ),
-        body: selectedAd == adsType[0]
-            ? const NativeAdScreen()
-            : selectedAd == adsType[1]
-                ? const AppOpenAdScreen()
-                : selectedAd == adsType[2]
-                    ? const IntersAdScreen()
-                    : selectedAd == adsType[3]
-                        ? const BannerAnchorAdScreen()
-                        : selectedAd == adsType[4]
-                            ? const InlineAdScreen()
-                            : selectedAd == adsType[5]
-                                ? const CollapsibleAdScreen()
-                                : const RewardedAdScreen(),
-      ),
+      home: const PreloadScreen(),
     );
   }
 }

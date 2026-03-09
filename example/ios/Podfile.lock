@@ -15,8 +15,6 @@ PODS:
     - Google-Mobile-Ads-SDK (~> 12.14.0)
     - webview_flutter_wkwebview
   - GoogleUserMessagingPlatform (3.1.0)
-  - integration_test (0.0.1):
-    - Flutter
   - mexa_ads (0.0.1):
     - Flutter
     - google_mobile_ads
@@ -28,7 +26,6 @@ DEPENDENCIES:
   - adjust_sdk (from `.symlinks/plugins/adjust_sdk/ios`)
   - Flutter (from `Flutter`)
   - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
-  - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - mexa_ads (from `.symlinks/plugins/mexa_ads/ios`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
@@ -46,8 +43,6 @@ EXTERNAL SOURCES:
     :path: Flutter
   google_mobile_ads:
     :path: ".symlinks/plugins/google_mobile_ads/ios"
-  integration_test:
-    :path: ".symlinks/plugins/integration_test/ios"
   mexa_ads:
     :path: ".symlinks/plugins/mexa_ads/ios"
   webview_flutter_wkwebview:
@@ -61,8 +56,7 @@ SPEC CHECKSUMS:
   Google-Mobile-Ads-SDK: 4534fd2dfcd3f705c5485a6633c5188d03d4eed2
   google_mobile_ads: df3008bafbe1f2ad6862f87334e560d2f047f902
   GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
-  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  mexa_ads: d0efa609a9daf8843eec2034bfba77693fab825d
+  mexa_ads: 416a8c1ab94233a22353b1db1f007f1e09ca814b
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
 PODFILE CHECKSUM: 1b4e38c5a7977b1d2784dfb12c349b2547df92da

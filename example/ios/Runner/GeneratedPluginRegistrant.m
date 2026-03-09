@@ -18,12 +18,6 @@
 @import google_mobile_ads;
 #endif
 
-#if __has_include(<integration_test/IntegrationTestPlugin.h>)
-#import <integration_test/IntegrationTestPlugin.h>
-#else
-@import integration_test;
-#endif
-
 #if __has_include(<mexa_ads/MexaAdsPlugin.h>)
 #import <mexa_ads/MexaAdsPlugin.h>
 #else
@@ -41,7 +35,6 @@
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [AdjustSdk registerWithRegistrar:[registry registrarForPlugin:@"AdjustSdk"]];
   [FLTGoogleMobileAdsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleMobileAdsPlugin"]];
-  [IntegrationTestPlugin registerWithRegistrar:[registry registrarForPlugin:@"IntegrationTestPlugin"]];
   [MexaAdsPlugin registerWithRegistrar:[registry registrarForPlugin:@"MexaAdsPlugin"]];
   [WebViewFlutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"WebViewFlutterPlugin"]];
 }

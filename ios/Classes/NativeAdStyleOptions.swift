@@ -71,7 +71,13 @@ public struct NativeAdStyleOptions {
     }
 
     public func applyCTABackground(to button: UIButton) {
-        button.layer.cornerRadius = ctaBorderRadius
+        // Clamp radius to half the button height so large values produce a
+        // pill shape (both ends fully rounded) instead of clipping corners.
+        // Falls back to the raw value before layout has determined the height.
+        let maxRadius = button.bounds.height > 0 ? button.bounds.height / 2 : ctaBorderRadius
+        let effectiveRadius = min(ctaBorderRadius, maxRadius)
+        button.layer.cornerRadius = effectiveRadius
+        button.layer.cornerCurve = .continuous   // smoother, matches Android
         button.clipsToBounds = true
 
         if ctaBackgroundColors.count >= 2 {
@@ -80,7 +86,8 @@ public struct NativeAdStyleOptions {
 
             let gradient = CAGradientLayer()
             gradient.colors = ctaBackgroundColors.map { $0.cgColor }
-            gradient.cornerRadius = ctaBorderRadius
+            // Use effectiveRadius (already clamped) for the gradient layer too.
+            gradient.cornerRadius = effectiveRadius
 
             switch gradientOrientation {
             case "TOP_BOTTOM":
@@ -103,6 +110,7 @@ public struct NativeAdStyleOptions {
             button.backgroundColor = .clear
 
             if let gradButton = button as? GradientButton {
+                gradButton.ctaBorderRadius = ctaBorderRadius  // store for re-clamp in layoutSubviews
                 gradButton.gradientLayer = gradient
             } else {
                 button.layer.insertSublayer(gradient, at: 0)
@@ -118,6 +126,10 @@ public struct NativeAdStyleOptions {
 }
 
 public class GradientButton: UIButton {
+    /// Stores the requested corner radius so `layoutSubviews` can re-clamp
+    /// it once the button's actual height is known.
+    public var ctaBorderRadius: CGFloat = 0
+
     public var gradientLayer: CAGradientLayer? {
         didSet {
             oldValue?.removeFromSuperlayer()
@@ -131,6 +143,14 @@ public class GradientButton: UIButton {
     public override func layoutSubviews() {
         super.layoutSubviews()
         gradientLayer?.frame = bounds
+
+        // Re-clamp corner radius now that we know the real height.
+        if ctaBorderRadius > 0 {
+            let effectiveRadius = min(ctaBorderRadius, bounds.height / 2)
+            layer.cornerRadius = effectiveRadius
+            layer.cornerCurve = .continuous
+            gradientLayer?.cornerRadius = effectiveRadius
+        }
     }
 }
 

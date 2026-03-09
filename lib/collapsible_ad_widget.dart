@@ -51,7 +51,6 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
   AdRequest? _adRequest;
   int _reloadAttempts = 0; // Thêm biến đếm số lần load thất bại
 
-  BannerAdListener? _bannerAdListener;
   @override
   void initState() {
     super.initState();
@@ -62,65 +61,6 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
       extras["collapsible_request_id"] = const Uuid().v4();
     }
     _adRequest = AdRequest(extras: extras);
-    _bannerAdListener = BannerAdListener(
-      onAdLoaded: (ad) {
-        setState(() {
-          _bannerAd = ad as BannerAd;
-          _isLoaded = true;
-        });
-        widget.onAdLoaded?.call();
-      },
-      onAdFailedToLoad: (ad, err) {
-        _reloadAttempts++; // Tăng biến đếm khi load thất bại
-        if (_reloadAttempts <= widget.maxReloadAttempts) {
-          logger("Ad load failed. Attempting reload #$_reloadAttempts");
-          Future.delayed(Duration(seconds: _reloadAttempts * 2), () {
-            _loadAd();
-          });
-        } else {
-          ad.dispose();
-          widget.onAdFailedToLoad?.call();
-          setState(() {
-            _isLoaded = false;
-          });
-          logger(
-              "Ad failed to load after $_reloadAttempts attempts. No more retries.");
-        }
-      },
-      onAdOpened: (Ad ad) {
-        widget.onAdOpened?.call();
-      },
-      onAdClosed: (Ad ad) {
-        widget.onAdClosed?.call();
-      },
-      onAdImpression: (Ad ad) {
-        widget.onAdImpression?.call();
-        logger("onAdImpression");
-      },
-      onAdClicked: (ad) {
-        widget.onAdClicked?.call();
-        MexaAds.instance.adClickedListener?.call(AdClickedParams(
-          networkName:
-              ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-          adUnitId: ad.adUnitId,
-          adType: AdType.bannerCollapsible.value,
-          placement: widget.placement,
-        ));
-      },
-      onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-        final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
-          networkName:
-              ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ?? '',
-          revenue: valueMicros / 1000000.0,
-          adUnitId: ad.adUnitId,
-          adType: AdType.bannerCollapsible.value,
-          placement: widget.placement,
-          country: currencyCode,
-        );
-        MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
-        MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
-      },
-    );
   }
 
   void _startAdReloadTimer() {
@@ -132,7 +72,7 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
       Duration(seconds: widget.reloadTimeInSeconds),
       (timer) {
         if (_isVisible) {
-          logger("reload ad collap");
+          logger("Collapsible Ad: reload ad collap");
           _loadAd();
         }
       },
@@ -143,23 +83,39 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
     _bannerAd?.dispose();
     _reloadAdTimer?.cancel(); // Dừng Timer khi không visible
     _reloadAdTimer = null;
-    logger("Ad reload timer stopped.");
+    logger("Collapsible Ad: Ad reload timer stopped.");
   }
 
   @override
   void dispose() {
     // Hủy Timer khi widget bị dispose
     _stopAdReloadTimer();
-    _bannerAdListener = null;
     _adRequest = null;
     super.dispose();
   }
 
-  void _loadAd() async {
+  void _loadAd({int adIndex = 0}) async {
     try {
       if (MexaAds.instance.isAdDisable || !mounted) {
         return;
       }
+      final adIds =
+          MexaAds.instance.adConstant.bannerCollapsibleId[widget.placement] ??
+              [];
+      logger("Collapsible Ad: adIds: ${widget.placement}");
+      if (adIndex >= adIds.length) {
+        logger('Collapsible Ad: Tất cả adIds đã thử và không thành công.');
+        widget.onAdFailedToLoad?.call();
+        setState(() {
+          _isLoaded = false;
+        });
+        return;
+      }
+
+      final currentAdId = adIds[adIndex];
+      logger(
+          'Collapsible Ad: Đang load với adId: $currentAdId (index: $adIndex)');
+
       _bannerAd?.dispose();
       // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
       final size =
@@ -175,16 +131,84 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
 
       BannerAd(
         adUnitId: kDebugMode
-            ? 'ca-app-pub-3940256099942544/2014213617'
-            : MexaAds.instance.adConstant
-                    .bannerCollapsibleId[widget.placement] ??
-                "",
+            ? getTestAdUnitId(AdType.bannerCollapsible)
+            : currentAdId,
         request: _adRequest ?? const AdRequest(),
         size: size,
-        listener: _bannerAdListener ?? const BannerAdListener(),
+        listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            logger('Collapsible Ad: Load thành công với adId: $currentAdId');
+            setState(() {
+              _bannerAd = ad as BannerAd;
+              _isLoaded = true;
+            });
+            widget.onAdLoaded?.call();
+          },
+          onAdFailedToLoad: (ad, err) {
+            logger(
+                'Collapsible Ad: Load thất bại với adId: $currentAdId. Lỗi: $err');
+
+            // Try next ad ID
+            if (adIndex < adIds.length - 1) {
+              _loadAd(adIndex: adIndex + 1);
+            } else {
+              _reloadAttempts++;
+              if (_reloadAttempts <= widget.maxReloadAttempts) {
+                logger(
+                    "Collapsible Ad: Ad load failed. Attempting reload #$_reloadAttempts");
+                Future.delayed(Duration(seconds: _reloadAttempts * 2), () {
+                  _loadAd(); // Retry from first ID
+                });
+              } else {
+                ad.dispose();
+                widget.onAdFailedToLoad?.call();
+                setState(() {
+                  _isLoaded = false;
+                });
+                logger(
+                    "Collapsible Ad: Ad failed to load after $_reloadAttempts attempts. No more retries.");
+              }
+            }
+          },
+          onAdOpened: (Ad ad) {
+            widget.onAdOpened?.call();
+          },
+          onAdClosed: (Ad ad) {
+            widget.onAdClosed?.call();
+          },
+          onAdImpression: (Ad ad) {
+            widget.onAdImpression?.call();
+            logger("Collapsible Ad: onAdImpression");
+          },
+          onAdClicked: (ad) {
+            widget.onAdClicked?.call();
+            MexaAds.instance.adClickedListener?.call(AdClickedParams(
+              networkName:
+                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                      '',
+              adUnitId: ad.adUnitId,
+              adType: AdType.bannerCollapsible.value,
+              placement: widget.placement,
+            ));
+          },
+          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+            final AdRevenuePaidParams adRevenuePaidParams = AdRevenuePaidParams(
+              networkName:
+                  ad.responseInfo?.loadedAdapterResponseInfo?.adSourceName ??
+                      '',
+              revenue: valueMicros / 1000000.0,
+              adUnitId: ad.adUnitId,
+              adType: AdType.bannerCollapsible.value,
+              placement: widget.placement,
+              country: currencyCode,
+            );
+            MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+            MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
+          },
+        ),
       ).load();
     } on Exception catch (e) {
-      logger(e.toString());
+      logger("Collapsible Ad: Error: $e");
     }
   }
 
@@ -194,10 +218,52 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
       _stopAdReloadTimer(); // Dừng Timer khi không còn visible
     } else if (info.visibleFraction > 0.0 && !_isVisible) {
       _isVisible = true;
-      _loadAd(); // Gọi hàm loadAd khi visible trở lại
+      _initCollapsibleAd(); // Kiểm tra preload trước khi load
       if (_reloadAdTimer == null && widget.reloadTimeInSeconds != 0) {
         _startAdReloadTimer(); // Khởi động lại Timer nếu nó đang dừng
       }
+    }
+  }
+
+  void _initCollapsibleAd() {
+    if (MexaAds.instance.isAdDisable || !mounted) return;
+    CollapsibleAdManager manager = MexaAds.instance.collapsibleAdManager;
+
+    // Check if a preloaded ad exists
+    if (manager.loadingCollapsibleCompleters[widget.placement] != null) {
+      Completer<void>? completer =
+          manager.loadingCollapsibleCompleters[widget.placement];
+
+      if (completer?.isCompleted == false) {
+        logger("Collapsible Ad: Waiting for preload to complete");
+        completer?.future.then((_) {
+          if (mounted) {
+            setState(() {
+              _bannerAd = manager.collapsibleAds[widget.placement];
+              _isLoaded = true;
+            });
+          }
+          manager.collapsibleAds.remove(widget.placement);
+          manager.loadingCollapsibleCompleters.remove(widget.placement);
+        }).catchError((error) {
+          logger(
+              "Collapsible Ad: Preload failed, falling back to _loadAd: $error");
+          _loadAd();
+        });
+      } else {
+        logger("Collapsible Ad: Using preloaded ad");
+        if (mounted) {
+          setState(() {
+            _bannerAd = manager.collapsibleAds[widget.placement];
+            _isLoaded = true;
+          });
+        }
+        manager.collapsibleAds.remove(widget.placement);
+        manager.loadingCollapsibleCompleters.remove(widget.placement);
+      }
+    } else {
+      // No preloaded ad, load directly (existing behavior)
+      _loadAd();
     }
   }
 

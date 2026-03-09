@@ -40,13 +40,10 @@ class CollapsibleAdScreen extends StatelessWidget {
               ),
             ),
           ),
-          Container(
-            color: Colors.red,
-            child: CollapsibleAdWidget(
-              isCollapsOnce: true,
-              placement: 'placement-${DateTime.now()}',
-              reloadTimeInSeconds: -1,
-            ),
+          const CollapsibleAdWidget(
+            isCollapsOnce: true,
+            placement: 'collap_1',
+            reloadTimeInSeconds: -1,
           ),
         ],
       ),

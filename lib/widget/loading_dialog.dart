@@ -13,7 +13,7 @@ class LoadingOverlay extends ModalRoute<void> {
   bool get barrierDismissible => false;
 
   @override
-  Color get barrierColor => Colors.black.withOpacity(0.7);
+  Color get barrierColor => Colors.black.withValues(alpha: 0.7);
 
   @override
   String get barrierLabel => '';
@@ -34,7 +34,7 @@ class LoadingOverlay extends ModalRoute<void> {
       child: SafeArea(
         child: PopScope(
           canPop: false,
-          onPopInvoked: (didPop) {},
+          onPopInvokedWithResult: (didPop, result) {},
           child:
               MexaAds.instance.loadingAdWidget ?? _buildOverlayContent(context),
         ),
