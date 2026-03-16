@@ -7,6 +7,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MexaAds.instance.initialize(
     adjustkey: "l7niimcenmyo",
+    appflyerId: "X6Kiaov2ZqhCk3fc7dGnCd",
     value: AdConstant(
         interstitialId: {
           'inter_1': ['ca-app-pub-3940256099942544/1033173712'],

@@ -15,11 +15,13 @@ import 'package:mexa_ads/rewarded_ad_controller.dart';
 import 'package:mexa_ads/utils.dart';
 import 'package:mexa_ads/widget/loading_dialog.dart';
 import 'package:uuid/uuid.dart';
+import 'package:appsflyer_sdk/appsflyer_sdk.dart';
 
 export 'package:adjust_sdk/adjust.dart';
 export 'package:adjust_sdk/adjust_ad_revenue.dart';
 export 'package:adjust_sdk/adjust_config.dart';
 export 'package:adjust_sdk/adjust_event.dart';
+export 'package:appsflyer_sdk/appsflyer_sdk.dart';
 
 typedef RevenuePaidedListener = Function(AdRevenuePaidParams params)?;
 typedef AdClickedListener = Function(AdClickedParams params)?;
@@ -36,6 +38,7 @@ class MexaAds {
   bool isAdDisable = false;
   bool loadAdAfterInitializing = true;
   Widget? loadingAdWidget;
+  AppsflyerSdk? appsflyerSdk;
 
   // native ad decoration
   Color? nativeBackgroundColor;
@@ -94,6 +97,35 @@ class MexaAds {
     }
   }
 
+  void logAppflyerRevenueEvent(AdRevenuePaidParams adRevenuePaidParams) {
+    if (appsflyerSdk != null) {
+      try {
+        final adRevenueData = AdRevenueData(
+          monetizationNetwork: adRevenuePaidParams.networkName,
+          mediationNetwork: adRevenuePaidParams.mediation,
+          currencyIso4217Code: adRevenuePaidParams.country,
+          revenue: adRevenuePaidParams.revenue,
+          additionalParameters: {
+            "af_ad_unit_id": adRevenuePaidParams.adUnitId,
+            "af_ad_type": adRevenuePaidParams.adType,
+            "af_placement": adRevenuePaidParams.placement,
+          },
+        );
+        appsflyerSdk!.logAdRevenue(adRevenueData);
+        appsflyerSdk!.logEvent("eventPurchase", {
+          "af_revenue": adRevenuePaidParams.revenue,
+          "af_currency": adRevenuePaidParams.country,
+          "af_network_name": adRevenuePaidParams.networkName,
+          "af_ad_unit_id": adRevenuePaidParams.adUnitId,
+          "af_ad_type": adRevenuePaidParams.adType,
+          "af_placement": adRevenuePaidParams.placement,
+        });
+      } catch (e) {
+        logger("MexaAds: Error Appsflyer logAppflyerRevenueEvent: $e");
+      }
+    }
+  }
+
   AdClickedListener? adClickedListener;
   void setLogLevel(MexaAdsLogLevel level) {
     setMexaAdsLogLevel(level);
@@ -106,10 +138,14 @@ class MexaAds {
   void initialize({
     required String adjustkey,
     required AdConstant value,
+    String appflyerId = "",
     List<String>? preloadPlacements,
   }) {
-    if (adjustkey != "") {
+    if (adjustkey.isNotEmpty) {
       _initAdjust(adjustkey);
+    }
+    if (appflyerId.isNotEmpty) {
+      _initAppsflyer(appflyerId);
     }
     MobileAds.instance.initialize();
     _adConstant = value;
@@ -169,6 +205,22 @@ class MexaAds {
       kDebugMode ? AdjustEnvironment.sandbox : AdjustEnvironment.production,
     );
     Adjust.initSdk(config);
+  }
+
+  void _initAppsflyer(String appflyerId) {
+    AppsFlyerOptions appsFlyerOptions = AppsFlyerOptions(
+      afDevKey: appflyerId,
+      showDebug: kDebugMode,
+      timeToWaitForATTUserAuthorization: 50,
+      disableAdvertisingIdentifier: false,
+      disableCollectASA: false,
+    );
+    appsflyerSdk = AppsflyerSdk(appsFlyerOptions);
+    appsflyerSdk!.initSdk(
+      registerConversionDataCallback: true,
+      registerOnAppOpenAttributionCallback: true,
+      registerOnDeepLinkingCallback: true,
+    );
   }
 
   Future<bool> loadInterAd({
@@ -896,6 +948,7 @@ class NativeAdManager {
               country: currencyCode,
             );
             MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+            MexaAds.instance.logAppflyerRevenueEvent(adRevenuePaidParams);
             MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
           },
         ),
@@ -992,6 +1045,7 @@ class BannerAdManager {
               country: currencyCode,
             );
             MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+            MexaAds.instance.logAppflyerRevenueEvent(adRevenuePaidParams);
             MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
           },
         ),
@@ -1097,6 +1151,7 @@ class CollapsibleAdManager {
               country: currencyCode,
             );
             MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+            MexaAds.instance.logAppflyerRevenueEvent(adRevenuePaidParams);
             MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
           },
         ),

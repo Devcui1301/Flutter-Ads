@@ -203,6 +203,7 @@ class _CollapsibleAdWidgetState extends State<CollapsibleAdWidget> {
               country: currencyCode,
             );
             MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+            MexaAds.instance.logAppflyerRevenueEvent(adRevenuePaidParams);
             MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
           },
         ),

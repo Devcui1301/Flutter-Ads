@@ -221,6 +221,7 @@ class _BannerAnchorAdWidgetState extends State<BannerAnchorAdWidget> {
               country: currencyCode,
             );
             MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+            MexaAds.instance.logAppflyerRevenueEvent(adRevenuePaidParams);
             MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
           },
         ),

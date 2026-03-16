@@ -154,6 +154,7 @@ class RewardedAdController implements AdController {
         country: currencyCode,
       );
       MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+      MexaAds.instance.logAppflyerRevenueEvent(adRevenuePaidParams);
       MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
     };
     _rewardedAd?.fullScreenContentCallback =

@@ -16,6 +16,7 @@ dependencies:
   lottie: "3.3.2"
   visibility_detector: "0.4.0+2"
   adjust_sdk: "5.5.0"
+  appsflyer_sdk: "6.17.8"
 
 dev_dependencies:
   flutter_test:

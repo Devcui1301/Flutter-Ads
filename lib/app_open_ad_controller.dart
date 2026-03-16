@@ -151,6 +151,7 @@ class AppOpenAdController implements AdController {
         country: currencyCode,
       );
       MexaAds.instance.logAdjustRevenueEvent(adRevenuePaidParams);
+      MexaAds.instance.logAppflyerRevenueEvent(adRevenuePaidParams);
       MexaAds.instance.adRevenuePaidListener?.call(adRevenuePaidParams);
     };
 
