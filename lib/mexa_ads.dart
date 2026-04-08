@@ -112,14 +112,14 @@ class MexaAds {
           },
         );
         appsflyerSdk!.logAdRevenue(adRevenueData);
-        appsflyerSdk!.logEvent("eventPurchase", {
-          "af_revenue": adRevenuePaidParams.revenue,
-          "af_currency": adRevenuePaidParams.country,
-          "af_network_name": adRevenuePaidParams.networkName,
-          "af_ad_unit_id": adRevenuePaidParams.adUnitId,
-          "af_ad_type": adRevenuePaidParams.adType,
-          "af_placement": adRevenuePaidParams.placement,
-        });
+        // appsflyerSdk!.logEvent("eventPurchase", {
+        //   "af_revenue": adRevenuePaidParams.revenue,
+        //   "af_currency": adRevenuePaidParams.country,
+        //   "af_network_name": adRevenuePaidParams.networkName,
+        //   "af_ad_unit_id": adRevenuePaidParams.adUnitId,
+        //   "af_ad_type": adRevenuePaidParams.adType,
+        //   "af_placement": adRevenuePaidParams.placement,
+        // });
       } catch (e) {
         logger("MexaAds: Error Appsflyer logAppflyerRevenueEvent: $e");
       }
